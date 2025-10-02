@@ -116,7 +116,7 @@ class Position:
             return False
 
     def __repr__(self):
-        return f"Vektor(x: {self.x}, y: {self.y}, z: {self.z})"
+        return f"(x: {self.x}, y: {self.y}, z: {self.z})"
 
 
 class Punkt(Position):
@@ -138,14 +138,24 @@ class Vektor(Position):
         længde = self.længde()
         return Vektor(self.x/længde, self.y/længde, self.z/længde)
 
+    def __repr__(self):
+        return f"Vektor(x: {self.x}, y: {self.y}, z: {self.z})"
+
 
 class Figur:
     def __init__(self, punkter: [Punkt]):
         self.punkter = punkter
 
-    def fåPunktLængstVækIEnRetning(self, r) -> Punkt:
-        pass
+    def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
+        PunktLængstVæk = self.punkter[0]
+        maksSkalar = 0
+        for punkt in self.punkter[1::]:
+            skalarProdukt = punkt.dot(r)
+            if skalarProdukt > maksSkalar:
+                maksSkalar = skalarProdukt
+                PunktLængstVæk = punkt
 
+        return PunktLængstVæk
 
 class Simplex:
     def __init__(self):
@@ -165,16 +175,14 @@ class Simplex:
 
 if __name__ == '__main__':
     punkt1 = Punkt(3,3, 3)
-    punkt2 = Punkt(1,2, 2)
-
-    punkt = punkt1 - punkt2
-    print(punkt.x, punkt.y, punkt.z)
-
     vektor1 = Vektor(3, 8, 2)
-    vektor2 = Vektor(6, 1, 7)
-    kryds = vektor1.kryds(vektor2)
 
-    print(kryds.dot(vektor2))
+    figur = Figur([Punkt(-1, 1), Punkt(-1, -1), Punkt(1, 1), Punkt(1, -1)])
+    print(figur.punkter)
+    print(figur.fåPunktLængstVækIEnRetning(Vektor(-0.4,-0.4)))
+
+
+    #print(punkt1.dot(vektor1))
 
     matrix1 = Matrix([
         [1, 1],
@@ -198,7 +206,7 @@ if __name__ == '__main__':
     ])
 
 
-    print(matrix3 * matrix4)
+    #print(matrix3 * matrix4)
 
     #for søjle in matrix3.få_søjler():
     #    print(søjle)
