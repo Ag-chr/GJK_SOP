@@ -100,6 +100,17 @@ class Position:
         z = self.z - other.z
         return self.__class__(x, y, z)
 
+    def __truediv__(self, other):
+        if type(other) in [int, float]:
+            x = self.x / other
+            y = self.y / other
+            z = self.z / other
+        else:
+            x = self.x / other.x
+            y = self.y / other.y
+            z = self.z / other.z
+        return self.__class__(x, y, z)
+
     def __neg__(self):
         return self.__class__(-self.x, -self.y, -self.z)
 
@@ -145,6 +156,9 @@ class Vektor(Position):
 class Figur:
     def __init__(self, punkter: [Punkt]):
         self.punkter = punkter
+        origo = sum(punkter, Punkt(0, 0)) / len(punkter)
+        self.punkter = list(map(lambda punkt: punkt - origo, self.punkter))
+
 
     def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
         PunktLængstVæk = self.punkter[0]
@@ -177,7 +191,7 @@ if __name__ == '__main__':
     punkt1 = Punkt(3,3, 3)
     vektor1 = Vektor(3, 8, 2)
 
-    figur = Figur([Punkt(-1, 1), Punkt(-1, -1), Punkt(1, 1), Punkt(1, -1)])
+    figur = Figur([Punkt(0, 2), Punkt(0, 0), Punkt(2, 2), Punkt(2, 0)])
     print(figur.punkter)
     print(figur.fåPunktLængstVækIEnRetning(Vektor(-0.4,-0.4)))
 
