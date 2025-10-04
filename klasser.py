@@ -1,6 +1,7 @@
 import math
 from copy import deepcopy
 
+
 class Matrix:
     def __init__(self, matrix: [[float]]):
         if type(matrix) == list and type(matrix[0]) == list and type(matrix[0][0]) == float:
@@ -88,6 +89,9 @@ class Position:
     def dot(self, other):
         return self.x * other.x + self.y * other.y + self.z * other.z
 
+    def tuple(self):
+        return self.x, self.y
+
     def __add__(self, other):
         x = self.x + other.x
         y = self.y + other.y
@@ -153,23 +157,41 @@ class Vektor(Position):
         return f"Vektor(x: {self.x}, y: {self.y}, z: {self.z})"
 
 
+import pygame
+from helper1 import til_skærm
+
 class Figur:
     def __init__(self, punkter: [Punkt]):
         self.punkter = punkter
-        origo = sum(punkter, Punkt(0, 0)) / len(punkter)
-        self.punkter = list(map(lambda punkt: punkt - origo, self.punkter))
-
+        self.centrum = sum(punkter, Punkt(0, 0)) / len(punkter)  # punkt som beskriver centrum af figuren
+        # justere så origo er i figurens centrum
+        self.punkter = list(map(lambda punkt: punkt - self.centrum, self.punkter))
 
     def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
         PunktLængstVæk = self.punkter[0]
         maksSkalar = 0
-        for punkt in self.punkter[1::]:
+        for punkt in self.punkter[1::]:  # [1::] springer over første punkt
             skalarProdukt = punkt.dot(r)
             if skalarProdukt > maksSkalar:
                 maksSkalar = skalarProdukt
                 PunktLængstVæk = punkt
 
         return PunktLængstVæk
+
+
+    def tegn(self, canvas):
+        # beregn transformation for punkter
+
+        # tegn nye punkter på skærm
+        tidligerePunkt = (self.punkter[0] + self.centrum).tuple()
+        pygame.draw.circle(canvas, (0,0,0), til_skærm(tidligerePunkt), 5)
+        for punkt in self.punkter[1::]: # [1::] springer over første punkt
+            punkt = (punkt + self.centrum).tuple()
+            pygame.draw.circle(canvas, (0, 0, 0), til_skærm(punkt), 5)
+            pygame.draw.line(canvas, (0,0,0), til_skærm(tidligerePunkt), til_skærm(punkt), 2)
+            tidligerePunkt = punkt
+        pygame.draw.line(canvas, (0, 0, 0), til_skærm(tidligerePunkt), til_skærm((self.punkter[0] + self.centrum).tuple()), 2)
+
 
 class Simplex:
     def __init__(self):
@@ -195,9 +217,6 @@ if __name__ == '__main__':
     print(figur.punkter)
     print(figur.fåPunktLængstVækIEnRetning(Vektor(-0.4,-0.4)))
 
-
-    #print(punkt1.dot(vektor1))
-
     matrix1 = Matrix([
         [1, 1],
         [1, 1]
@@ -220,7 +239,7 @@ if __name__ == '__main__':
     ])
 
 
-    #print(matrix3 * matrix4)
+    print(matrix2 * matrix1)
 
     #for søjle in matrix3.få_søjler():
     #    print(søjle)
