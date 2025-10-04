@@ -14,7 +14,17 @@ scale = VINDUEHØJDE / 100
 canvas = pygame.Surface((VINDUEBREDDE, VINDUEHØJDE))
 
 figur = Figur([Punkt(-100, 100), Punkt(100, 100), Punkt(100, -100), Punkt(-100, -100)])
-figur.centrum = Punkt(200, 100)
+figur.centrum = Punkt(0, 0)
+
+rotate = Matrix([
+    [math.cos(math.degrees(30)), -math.sin(math.degrees(30))],
+    [math.sin(math.degrees(30)), math.cos(math.degrees(30))]
+])
+
+figur.tilføjTransformation(rotate)
+
+
+
 if __name__ == '__main__':
     while running:
         clock.tick(60)

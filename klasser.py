@@ -4,7 +4,7 @@ from copy import deepcopy
 
 class Matrix:
     def __init__(self, matrix: [[float]]):
-        if type(matrix) == list and type(matrix[0]) == list and type(matrix[0][0]) == float:
+        if type(matrix) != list and type(matrix[0]) != list and type(matrix[0][0]) not in [float, int]:
             raise "matrix er ikke en nested list af floats"
         self.matrix = matrix
 
@@ -80,6 +80,9 @@ class Matrix:
 
         return Matrix(matrix)
 
+    def __getitem__(self, index):
+        return self.matrix[index]
+
 class Position:
     def __init__(self, x: float, y: float, z: float=0):
         self.x = x
@@ -91,6 +94,19 @@ class Position:
 
     def tuple(self):
         return self.x, self.y
+
+    def til_søjlevektor(self, til_3d=False):
+        if til_3d:
+            return Matrix([
+                [self.x],
+                [self.y],
+                [self.z]
+            ])
+        else:
+            return Matrix([
+                [self.x],
+                [self.y]
+            ])
 
     def __add__(self, other):
         x = self.x + other.x
@@ -164,8 +180,11 @@ class Figur:
     def __init__(self, punkter: [Punkt]):
         self.punkter = punkter
         self.centrum = sum(punkter, Punkt(0, 0)) / len(punkter)  # punkt som beskriver centrum af figuren
-        # justere så origo er i figurens centrum
-        self.punkter = list(map(lambda punkt: punkt - self.centrum, self.punkter))
+
+        self.punkter = list(map(lambda punkt: punkt - self.centrum, self.punkter))  # justere figuren så origo er figurens centrum
+        self.transformationer = [Matrix([[1,0],[0,1]])]
+        self.komposition = Matrix([[1,0],[0,1]])
+
 
     def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
         PunktLængstVæk = self.punkter[0]
@@ -178,19 +197,45 @@ class Figur:
 
         return PunktLængstVæk
 
+    def tilføjTransformation(self, matrix: Matrix):
+        # tjekker om matrix er rigtig størrelse (et 2x2 matrix)
+        if matrix.rækker() != 2 and matrix.søjler() != 2:
+            return -1
+
+        self.transformationer.append(matrix)
+        self.regnKomposition()
+
+    def fjernTransformation(self, num=-1):
+        if num == 0 or len(self.transformationer) == 1:
+            return
+        self.transformationer.pop(num)
+        self.regnKomposition()
+
+    def regnKomposition(self):
+        komposition = self.transformationer[0]
+        # går baglæns og fjerner den sidste tilføjet til listen
+        for transformation in self.transformationer[1::]:
+            komposition = transformation * komposition
+        self.komposition = komposition
+
+    def regn_punkt_transformation(self, punkt: Punkt):
+        søjle_v = punkt.til_søjlevektor()
+        søjle_v = self.komposition * søjle_v
+        punkt = Punkt(søjle_v[0][0], søjle_v[1][0])
+        return punkt + self.centrum
 
     def tegn(self, canvas):
         # beregn transformation for punkter
 
         # tegn nye punkter på skærm
-        tidligerePunkt = (self.punkter[0] + self.centrum).tuple()
+        tidligerePunkt = self.regn_punkt_transformation(self.punkter[0]).tuple()
         pygame.draw.circle(canvas, (0,0,0), til_skærm(tidligerePunkt), 5)
         for punkt in self.punkter[1::]: # [1::] springer over første punkt
-            punkt = (punkt + self.centrum).tuple()
+            punkt = self.regn_punkt_transformation(punkt).tuple()
             pygame.draw.circle(canvas, (0, 0, 0), til_skærm(punkt), 5)
             pygame.draw.line(canvas, (0,0,0), til_skærm(tidligerePunkt), til_skærm(punkt), 2)
             tidligerePunkt = punkt
-        pygame.draw.line(canvas, (0, 0, 0), til_skærm(tidligerePunkt), til_skærm((self.punkter[0] + self.centrum).tuple()), 2)
+        pygame.draw.line(canvas, (0, 0, 0), til_skærm(tidligerePunkt), til_skærm(self.regn_punkt_transformation(self.punkter[0]).tuple()), 2)
 
 
 class Simplex:
@@ -210,37 +255,15 @@ class Simplex:
 
 
 if __name__ == '__main__':
-    punkt1 = Punkt(3,3, 3)
-    vektor1 = Vektor(3, 8, 2)
 
-    figur = Figur([Punkt(0, 2), Punkt(0, 0), Punkt(2, 2), Punkt(2, 0)])
-    print(figur.punkter)
-    print(figur.fåPunktLængstVækIEnRetning(Vektor(-0.4,-0.4)))
 
-    matrix1 = Matrix([
-        [1, 1],
-        [1, 1]
-    ])
-
-    matrix2 = Matrix([
-        [2],
-        [3]
-    ])
-
-    matrix3 = Matrix([
-        [1, 2, 3],
-        [4, 5, 6]
-    ])
-
-    matrix4 = Matrix([
+    figur = Figur([Punkt(0,0), Punkt(2,0), Punkt(2,2), Punkt(0,2)])
+    shear = Matrix([
         [1, 2],
-        [3, 4],
-        [5, 6]
+        [0, 1]
     ])
-
-
-    print(matrix2 * matrix1)
-
-    #for søjle in matrix3.få_søjler():
-    #    print(søjle)
+    figur.tilføjTransformation(shear)
+    print(figur.komposition)
+    print(figur.punkter[0])
+    print(figur.regn_punkt_transformation(figur.punkter[0]))
 
