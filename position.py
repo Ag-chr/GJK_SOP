@@ -49,6 +49,14 @@ class Position:
             z = self.z / other.z
         return self.__class__(x, y, z)
 
+    def __mul__(self, other):
+        if type(other) not in [float, int]:
+            raise "Kan kun gange en skalar på"
+        x = self.x * other
+        y = self.y * other
+        z = self.z * other
+        return self.__class__(x, y, z)
+
     def __neg__(self):
         return self.__class__(-self.x, -self.y, -self.z)
 
@@ -83,7 +91,7 @@ class Vektor(Position):
     def længde(self):
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
-    def normaliserer(self):
+    def enhed_vektor(self):
         længde = self.længde()
         return Vektor(self.x/længde, self.y/længde, self.z/længde)
 

@@ -18,13 +18,13 @@ class Figur:
     def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
         PunktLængstVæk = self.punkter[0]
         maksSkalar = 0
-        for punkt in self.punkter[1::]:  # [1::] springer over første punkt
+        for punkt in self.punkter:
             skalarProdukt = punkt.dot(r)
             if skalarProdukt > maksSkalar:
                 maksSkalar = skalarProdukt
                 PunktLængstVæk = punkt
 
-        return PunktLængstVæk
+        return PunktLængstVæk + self.centrum
 
     def tilføjTransformation(self, matrix: Matrix):
         # tjekker om matrix er rigtig størrelse (et 2x2 matrix)
@@ -78,6 +78,12 @@ class Simplex:
     def fåSeneste(self) -> Punkt:
         return self.punkter[0]
 
+    def fåB(self) -> Punkt:
+        return self.punkter[1]
+
+    def fåC(self) -> Punkt:
+        return self.punkter[2]
+
     # se om simplex indeholder punktet
     def indeholder(self, punkt: Punkt):
         pass
@@ -95,4 +101,12 @@ if __name__ == '__main__':
     print(figur.komposition)
     print(figur.punkter[0])
     print(figur.regn_punkt_transformation(figur.punkter[0]))
+
+    a = Vektor(3, 2)
+    b = Vektor(5, 3)
+    c = Vektor(2, 6)
+
+    print(f"kryds: {a.kryds(b).kryds(c)}")
+    print(f"anden formel: {b*(c.dot(a)) - (a*(c.dot(b)))}")
+
 
