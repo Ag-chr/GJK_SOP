@@ -1,7 +1,7 @@
 import pygame
 
 from konstanter import *
-from helper1 import til_skærm
+from pygameHelper import til_skærm
 from klasser import *
 
 pygame.init()
