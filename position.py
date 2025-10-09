@@ -26,6 +26,11 @@ class Position:
                 [self.y]
             ])
 
+    def sæt(self, punkt):
+        self.x = punkt.x
+        self.y = punkt.y
+        self.z = punkt.z
+
     def __add__(self, other):
         x = self.x + other.x
         y = self.y + other.y
@@ -95,5 +100,10 @@ class Vektor(Position):
         længde = self.længde()
         return Vektor(self.x/længde, self.y/længde, self.z/længde)
 
+
     def __repr__(self):
         return f"Vektor(x: {self.x}, y: {self.y}, z: {self.z})"
+
+
+def vektorTripelProdukt(a: Vektor, b: Vektor, c: Vektor) -> Vektor:
+    return b * (c.dot(a)) - (a * (c.dot(b)))

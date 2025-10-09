@@ -1,9 +1,8 @@
 import pygame
 
 from matrix import Matrix
-from position import Punkt, Vektor
+from position import Punkt, Vektor, vektorTripelProdukt
 from pygameHelper import til_skærm
-
 
 class Figur:
     def __init__(self, punkter: [Punkt]):
@@ -14,6 +13,11 @@ class Figur:
         self.transformationer = [Matrix([[1,0],[0,1]])]
         self.komposition = Matrix([[1,0],[0,1]])
 
+    def fåPunkt(self, index):
+        return self.regn_punkt_transformation(self.punkter[index]) + self.centrum
+
+    def tilVerden(self, punkt: Punkt):
+        return self.regn_punkt_transformation(punkt) + self.centrum
 
     def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
         PunktLængstVæk = self.punkter[0]
@@ -24,7 +28,7 @@ class Figur:
                 maksSkalar = skalarProdukt
                 PunktLængstVæk = punkt
 
-        return PunktLængstVæk + self.centrum
+        return self.tilVerden(PunktLængstVæk)
 
     def tilføjTransformation(self, matrix: Matrix):
         # tjekker om matrix er rigtig størrelse (et 2x2 matrix)
@@ -51,20 +55,22 @@ class Figur:
         søjle_v = punkt.til_søjlevektor()
         søjle_v = self.komposition * søjle_v
         punkt = Punkt(søjle_v[0][0], søjle_v[1][0])
-        return punkt + self.centrum
+        return punkt
 
     def tegn(self, canvas):
         # beregn transformation for punkter
 
         # tegn nye punkter på skærm
-        tidligerePunkt = self.regn_punkt_transformation(self.punkter[0]).tuple()
+        tidligerePunkt = self.fåPunkt(0).tuple()
         pygame.draw.circle(canvas, (0,0,0), til_skærm(tidligerePunkt), 5)
-        for punkt in self.punkter[1::]: # [1::] springer over første punkt
-            punkt = self.regn_punkt_transformation(punkt).tuple()
+        for punkt in self.punkter:  # springer over første punkt
+            punkt = self.tilVerden(punkt).tuple()
+
             pygame.draw.circle(canvas, (0, 0, 0), til_skærm(punkt), 5)
             pygame.draw.line(canvas, (0,0,0), til_skærm(tidligerePunkt), til_skærm(punkt), 2)
+
             tidligerePunkt = punkt
-        pygame.draw.line(canvas, (0, 0, 0), til_skærm(tidligerePunkt), til_skærm(self.regn_punkt_transformation(self.punkter[0]).tuple()), 2)
+        pygame.draw.line(canvas, (0, 0, 0), til_skærm(tidligerePunkt), til_skærm(self.fåPunkt(0).tuple()), 2)
 
 
 class Simplex:
@@ -73,6 +79,9 @@ class Simplex:
 
     def tilføj(self, punkt: Punkt):
         self.punkter.insert(0, punkt)
+
+    def fjern(self, punkt: Punkt):
+        self.punkter.remove(punkt)
 
     # få seneste tilføjet punkt
     def fåSeneste(self) -> Punkt:
@@ -85,8 +94,41 @@ class Simplex:
         return self.punkter[2]
 
     # se om simplex indeholder punktet
-    def indeholder(self, punkt: Punkt):
-        pass
+    def indeholder(self, punkt: Punkt, r: Vektor):
+        a = self.fåSeneste()
+
+        ao = Punkt(0,0) - a
+        if (len(self.punkter) == 3):
+            b = self.fåB()
+            c = self.fåC()
+
+            ab = b - a
+            ac = c - a
+
+            abVinkelret = vektorTripelProdukt(ac, ab, ab)
+            acVinkelret = vektorTripelProdukt(ab, ac, ac)
+
+            if abVinkelret.dot(ao) > 0:
+                self.fjern(c)
+                r.sæt(abVinkelret)
+            else:
+                if acVinkelret.dot(ao) > 0:
+                    self.fjern(b)
+                    r.sæt(acVinkelret)
+                else:
+                    return True
+
+        else: # betyder at det er et linje segment
+            b = self.fåB()
+
+            ab = b - a
+            abVinkelret = vektorTripelProdukt(ab, ao, ab)
+
+            r.sæt(abVinkelret)
+        return False
+
+    def __repr__(self):
+        return f"Punkter: {self.punkter}"
 
 
 if __name__ == '__main__':

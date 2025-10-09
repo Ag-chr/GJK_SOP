@@ -1,4 +1,5 @@
-from figurer import *
+from figurer import Figur, Vektor, Punkt, Simplex
+
 
 def support(figur1: Figur, figur2: Figur, r: Vektor) -> Punkt:
     p1 = figur1.fåPunktLængstVækIEnRetning(r)
@@ -9,12 +10,7 @@ def support(figur1: Figur, figur2: Figur, r: Vektor) -> Punkt:
     return p3
 
 
-# får retning mod origo
-def fåRetning(simplex: Simplex):
-    pass
 
-def vektorTripelProdukt(a: Vektor, b: Vektor, c: Vektor) -> Vektor:
-    return b * (c.dot(a)) - (a * (c.dot(b)))
 
 if __name__ == '__main__':
     figur1 = Figur([Punkt(4,5), Punkt(9,9), Punkt(4,11)])
