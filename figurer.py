@@ -1,3 +1,5 @@
+import math
+
 import pygame
 
 from matrix import Matrix
@@ -62,11 +64,11 @@ class Figur:
 
         # tegn nye punkter på skærm
         tidligerePunkt = self.fåPunkt(0).tuple()
-        pygame.draw.circle(canvas, (0,0,0), til_skærm(tidligerePunkt), 5)
+        pygame.draw.circle(canvas, (0,0,0), til_skærm(tidligerePunkt), 3)
         for punkt in self.punkter:  # springer over første punkt
             punkt = self.tilVerden(punkt).tuple()
 
-            pygame.draw.circle(canvas, (0, 0, 0), til_skærm(punkt), 5)
+            pygame.draw.circle(canvas, (0, 0, 0), til_skærm(punkt), 3)
             pygame.draw.line(canvas, (0,0,0), til_skærm(tidligerePunkt), til_skærm(punkt), 2)
 
             tidligerePunkt = punkt
@@ -131,9 +133,25 @@ class Simplex:
         return f"Punkter: {self.punkter}"
 
 
+class Cirkel(Figur):
+    def __init__(self, radius, pos: Punkt):
+        super().__init__([Punkt(0, 0)])
+        self.centrum = pos
+        self.radius = radius
+
+
+    def tegn(self, canvas):
+        pygame.draw.circle(canvas, (0, 0, 0), til_skærm(self.centrum.tuple()), self.radius, 2)
+
+    def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
+        _, vinkel = r.polær_vektor()
+        x = self.radius * math.cos(vinkel)
+        y = self.radius * math.sin(vinkel)
+
+        return Punkt(x, y) + self.centrum
+
+
 if __name__ == '__main__':
-
-
     figur = Figur([Punkt(0,0), Punkt(2,0), Punkt(2,2), Punkt(0,2)])
     shear = Matrix([
         [1, 2],

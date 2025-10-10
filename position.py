@@ -100,6 +100,11 @@ class Vektor(Position):
         længde = self.længde()
         return Vektor(self.x/længde, self.y/længde, self.z/længde)
 
+    def polær_vektor(self):
+        længde = self.længde()
+        vinkel = math.atan2(self.y, self.x)
+        return længde, vinkel
+
 
     def __repr__(self):
         return f"Vektor(x: {self.x}, y: {self.y}, z: {self.z})"

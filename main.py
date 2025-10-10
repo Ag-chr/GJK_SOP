@@ -6,6 +6,7 @@ import math
 from konstanter import *
 from pygameHelper import til_skærm
 from figurer import *
+from gjk_funkioner import support
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -23,6 +24,7 @@ rotate = Matrix([
 
 figur1 = Figur([Punkt(4,11), Punkt(9,9), Punkt(4,5)])
 figur2 = Figur([Punkt(5, 7), Punkt(12, 7), Punkt(10, 2), Punkt(7, 3)])
+cirkel = Cirkel(30, Punkt(0,100))
 
 skalere = Matrix([
     [30, 0],
@@ -38,8 +40,14 @@ figur2.centrum *= 30
 
 figurer.append(figur1)
 figurer.append(figur2)
+figurer.append(cirkel)
+
+
 
 def start():
+    holderFigur = False
+    holdtFigur = None
+
     running = True
     while running:
         clock.tick(60)
@@ -50,18 +58,37 @@ def start():
                 running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_k:
                 print(tjekKollision(figur1, figur2))
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
-                figur2.centrum.x -= 10
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
-                figur2.centrum.x += 10
+
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                pos = list(event.pos)
+                pos[0] -= VINDUEBREDDE // 2
+                pos[1] = -(pos[1] - VINDUEHØJDE // 2)
+                cirkel = Cirkel(5, Punkt(pos[0], pos[1]))
+
+                for figur in figurer:
+                    tjekKollision(cirkel, figur)
+                    if tjekKollision(Cirkel(1, Punkt(pos[0], pos[1])), figur):
+                        holderFigur = True
+                        holdtFigur = figur
+                        break
+
+            if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+                holderFigur = False
+                holdtFigur = None
+
+            elif event.type == pygame.MOUSEMOTION and holderFigur:
+                bevægelse = event.rel
+                holdtFigur.centrum.x += bevægelse[0]
+                holdtFigur.centrum.y -= bevægelse[1]
+
+
 
         canvas.fill((255, 255, 255))
         pygame.draw.line(canvas, (0, 0, 0), til_skærm(-VINDUEBREDDE / 2, 0), til_skærm(VINDUEBREDDE / 2, 0),
-                         2)  # vandret linje
+                         2)  # x akse
         pygame.draw.line(canvas, (0, 0, 0), til_skærm(0, -VINDUEHØJDE / 2), til_skærm(0, VINDUEHØJDE / 2),
-                         2)  # lodret linje
-
-        pygame.draw.circle(canvas, (0, 0, 0), til_skærm(0, 0), 10)
+                         2)  # y akse
+        pygame.draw.circle(canvas, (0, 0, 0), til_skærm(0, 0), 10)  # origo
 
         for figur in figurer:
             figur.tegn(canvas)
@@ -70,9 +97,6 @@ def start():
         window.blit(canvas, (0, 0))
         pygame.display.update()
 
-
-
-from gjk_funkioner import support
 
 def tjekKollision(figur1: Figur, figur2: Figur) -> bool:
     simplex = Simplex()
@@ -97,6 +121,7 @@ def tjekKollision(figur1: Figur, figur2: Figur) -> bool:
         else:
             if (simplex.indeholder(Punkt(0,0), r)):
                 return True
+
 
 if __name__ == '__main__':
     start()
