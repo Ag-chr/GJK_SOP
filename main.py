@@ -14,6 +14,10 @@ clock = pygame.time.Clock()
 window = pygame.display.set_mode((VINDUEBREDDE, VINDUEHØJDE))
 scale = VINDUEHØJDE / 100
 canvas = pygame.Surface((VINDUEBREDDE, VINDUEHØJDE))
+font = pygame.font.Font(None, 36)
+
+text = font.render(f"Kollision: {False}", True, (0, 0, 0))
+text_rect = text.get_rect(topleft=(10, 10))
 
 figurer = []
 
@@ -43,7 +47,6 @@ figurer.append(figur2)
 figurer.append(cirkel)
 
 
-
 def start():
     holderFigur = False
     holdtFigur = None
@@ -56,8 +59,6 @@ def start():
                 running = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_k:
-                print(tjekKollision(figur1, figur2))
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 pos = list(event.pos)
@@ -81,8 +82,6 @@ def start():
                 holdtFigur.centrum.x += bevægelse[0]
                 holdtFigur.centrum.y -= bevægelse[1]
 
-
-
         canvas.fill((255, 255, 255))
         pygame.draw.line(canvas, (0, 0, 0), til_skærm(-VINDUEBREDDE / 2, 0), til_skærm(VINDUEBREDDE / 2, 0),
                          2)  # x akse
@@ -93,6 +92,16 @@ def start():
         for figur in figurer:
             figur.tegn(canvas)
 
+        kollision = False
+        for figur1 in figurer:
+            for figur2 in figurer:
+                if tjekKollision(figur1, figur2):
+                    kollision = True
+                    figur1.tegn(canvas, (255, 0, 0))
+                    figur2.tegn(canvas, (255, 0, 0))
+        text = font.render(f"Kollision: {kollision}", True, (0, 0, 0))
+
+        canvas.blit(text, text_rect)
         window.set_clip(pygame.Rect((0, 0), (VINDUEBREDDE, VINDUEHØJDE)))
         window.blit(canvas, (0, 0))
         pygame.display.update()
@@ -113,13 +122,13 @@ def tjekKollision(figur1: Figur, figur2: Figur) -> bool:
         simplex.tilføj(support(figur1, figur2, r))
 
         # sikre at det nyeste tilføjet punkt faktisk passerede origo
-        if (simplex.fåSeneste().dot(r) <= 0):
+        if simplex.fåSeneste().dot(r) <= 0:
             # det betyder at punktet passerede ikke origo
             # dette betyder at det er umuligt at lave en trekant som indeholder origo
             # da vi altid laver punkter på kanten af minkowski differencen
             return False
         else:
-            if (simplex.indeholder(Punkt(0,0), r)):
+            if simplex.indeholder(Punkt(0,0), r):
                 return True
 
 

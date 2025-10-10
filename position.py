@@ -98,6 +98,7 @@ class Vektor(Position):
 
     def enhed_vektor(self):
         længde = self.længde()
+        if længde == 0: return Vektor(0, 0)
         return Vektor(self.x/længde, self.y/længde, self.z/længde)
 
     def polær_vektor(self):

@@ -59,20 +59,20 @@ class Figur:
         punkt = Punkt(søjle_v[0][0], søjle_v[1][0])
         return punkt
 
-    def tegn(self, canvas):
+    def tegn(self, canvas, farve=(0,0,0)):
         # beregn transformation for punkter
 
         # tegn nye punkter på skærm
         tidligerePunkt = self.fåPunkt(0).tuple()
-        pygame.draw.circle(canvas, (0,0,0), til_skærm(tidligerePunkt), 3)
+        pygame.draw.circle(canvas, farve, til_skærm(tidligerePunkt), 3)
         for punkt in self.punkter:  # springer over første punkt
             punkt = self.tilVerden(punkt).tuple()
 
-            pygame.draw.circle(canvas, (0, 0, 0), til_skærm(punkt), 3)
-            pygame.draw.line(canvas, (0,0,0), til_skærm(tidligerePunkt), til_skærm(punkt), 2)
+            pygame.draw.circle(canvas, farve, til_skærm(punkt), 3)
+            pygame.draw.line(canvas, farve, til_skærm(tidligerePunkt), til_skærm(punkt), 2)
 
             tidligerePunkt = punkt
-        pygame.draw.line(canvas, (0, 0, 0), til_skærm(tidligerePunkt), til_skærm(self.fåPunkt(0).tuple()), 2)
+        pygame.draw.line(canvas, farve, til_skærm(tidligerePunkt), til_skærm(self.fåPunkt(0).tuple()), 2)
 
 
 class Simplex:
@@ -140,8 +140,8 @@ class Cirkel(Figur):
         self.radius = radius
 
 
-    def tegn(self, canvas):
-        pygame.draw.circle(canvas, (0, 0, 0), til_skærm(self.centrum.tuple()), self.radius, 2)
+    def tegn(self, canvas, farve=(0,0,0)):
+        pygame.draw.circle(canvas, farve, til_skærm(self.centrum.tuple()), self.radius, 2)
 
     def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
         _, vinkel = r.polær_vektor()
