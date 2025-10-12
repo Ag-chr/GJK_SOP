@@ -12,14 +12,15 @@ class Figur:
         self.centrum = sum(punkter, Punkt(0, 0)) / len(punkter)  # punkt som beskriver centrum af figuren
 
         self.punkter = list(map(lambda punkt: punkt - self.centrum, self.punkter))  # justere figuren så origo er figurens centrum
+        self.punkter: list[Punkt] = self.sorterePunkterMedUret()
         self.transformationer = [Matrix([[1,0],[0,1]])]
         self.komposition = Matrix([[1,0],[0,1]])
 
     def fåPunkt(self, index):
-        return self.regn_punkt_transformation(self.punkter[index]) + self.centrum
+        return self.regnPunktTransformation(self.punkter[index]) + self.centrum
 
     def tilVerden(self, punkt: Punkt):
-        return self.regn_punkt_transformation(punkt) + self.centrum
+        return self.regnPunktTransformation(punkt) + self.centrum
 
     def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
         PunktLængstVæk = self.punkter[0]
@@ -38,22 +39,22 @@ class Figur:
             return -1
 
         self.transformationer.append(matrix)
-        self.regnKomposition()
+        self.regnKompositionMatrix()
 
     def fjernTransformation(self, num=-1):
         if num == 0 or len(self.transformationer) == 1:
             return
         self.transformationer.pop(num)
-        self.regnKomposition()
+        self.regnKompositionMatrix()
 
-    def regnKomposition(self):
+    def regnKompositionMatrix(self):
         komposition = self.transformationer[0]
         # går baglæns og fjerner den sidste tilføjet til listen
         for transformation in self.transformationer[1::]:
             komposition = transformation * komposition
         self.komposition = komposition
 
-    def regn_punkt_transformation(self, punkt: Punkt):
+    def regnPunktTransformation(self, punkt: Punkt):
         søjle_v = punkt.til_søjlevektor()
         søjle_v = self.komposition * søjle_v
         punkt = Punkt(søjle_v[0][0], søjle_v[1][0])
@@ -73,6 +74,12 @@ class Figur:
 
             tidligerePunkt = punkt
         pygame.draw.line(canvas, farve, til_skærm(tidligerePunkt), til_skærm(self.fåPunkt(0).tuple()), 2)
+
+    def sorterePunkterMedUret(self):
+        vinkel_fra_midten = lambda p: math.atan2(p.y, p.x)
+
+        sorteretPunkter = sorted(self.punkter, key=vinkel_fra_midten, reverse=True)
+        return sorteretPunkter
 
 
 class Simplex:
@@ -151,6 +158,9 @@ class Cirkel(Figur):
         return Punkt(x, y) + self.centrum
 
 
+
+
+
 if __name__ == '__main__':
     figur = Figur([Punkt(0,0), Punkt(2,0), Punkt(2,2), Punkt(0,2)])
     shear = Matrix([
@@ -160,7 +170,7 @@ if __name__ == '__main__':
     figur.tilføjTransformation(shear)
     print(figur.komposition)
     print(figur.punkter[0])
-    print(figur.regn_punkt_transformation(figur.punkter[0]))
+    print(figur.regnPunktTransformation(figur.punkter[0]))
 
     a = Vektor(3, 2)
     b = Vektor(5, 3)

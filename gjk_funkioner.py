@@ -9,6 +9,30 @@ def support(figur1: Figur, figur2: Figur, r: Vektor) -> Punkt:
     p3 = p1 - p2
     return p3
 
+def minkowski(figur1: Figur, figur2: Figur, sum=True):
+    minkowskiPunkter: list[Punkt] = []
+
+    for punkt1 in figur1.punkter:
+        for punkt2 in figur2.punkter:
+            punkta = figur1.tilVerden(punkt1)
+            punktb = figur2.tilVerden(punkt2)
+            if sum:
+                minkowskiPunkter.append(punkta + punktb)
+            else:
+                minkowskiPunkter.append(punkta - punktb)
+
+    minkowskiFigur = Figur(minkowskiPunkter)
+
+    ydrePunkter = []
+    for punkt in minkowskiFigur.punkter:
+        retning = punkt.tilStedVektor().enhedsvektor()
+        ydrePunkt = minkowskiFigur.fåPunktLængstVækIEnRetning(retning)
+        if ydrePunkt not in ydrePunkter:
+            ydrePunkter.append(ydrePunkt)
+
+    return Figur(ydrePunkter)
+
+
 
 
 

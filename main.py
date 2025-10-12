@@ -6,7 +6,7 @@ import math
 from konstanter import *
 from pygameHelper import til_skærm
 from figurer import *
-from gjk_funkioner import support
+from gjk_funkioner import support, minkowski
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -27,24 +27,29 @@ rotate = Matrix([
 ])
 
 figur1 = Figur([Punkt(4,11), Punkt(9,9), Punkt(4,5)])
-figur2 = Figur([Punkt(5, 7), Punkt(12, 7), Punkt(10, 2), Punkt(7, 3)])
+figur2 = Figur([Punkt(5, 7), Punkt(10, 2), Punkt(12, 7), Punkt(7, 3)])
 cirkel = Cirkel(30, Punkt(0,100))
+
+
 
 skalere = Matrix([
     [30, 0],
     [0, 30]
 ])
 
-#TODO: lav kode som kan bruges til at teste hvor hurtig algoritmen er
-
 figur1.tilføjTransformation(skalere)
 figur2.tilføjTransformation(skalere)
+
 figur1.centrum *= 30
 figur2.centrum *= 30
+
+minkowskiFigur = minkowski(figur1, figur2, False)
+
 
 figurer.append(figur1)
 figurer.append(figur2)
 figurer.append(cirkel)
+figurer.append(minkowskiFigur)
 
 
 def start():
@@ -87,7 +92,7 @@ def start():
                          2)  # x akse
         pygame.draw.line(canvas, (0, 0, 0), til_skærm(0, -VINDUEHØJDE / 2), til_skærm(0, VINDUEHØJDE / 2),
                          2)  # y akse
-        pygame.draw.circle(canvas, (0, 0, 0), til_skærm(0, 0), 10)  # origo
+        #pygame.draw.circle(canvas, (0, 0, 0), til_skærm(0, 0), 10)  # origo
 
         for figur in figurer:
             figur.tegn(canvas)
@@ -111,7 +116,7 @@ def tjekKollision(figur1: Figur, figur2: Figur) -> bool:
     simplex = Simplex()
     # Der vælges en søge retning mod figur2 fra figur1
     r = Vektor(figur2.centrum.x - figur1.centrum.x,
-               figur2.centrum.y - figur1.centrum.y).enhed_vektor()
+               figur2.centrum.y - figur1.centrum.y).enhedsvektor()
     # Får første minkowski difference punkt
     simplex.tilføj(support(figur1,figur2, r))
 

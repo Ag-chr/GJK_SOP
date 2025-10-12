@@ -96,7 +96,7 @@ class Vektor(Position):
     def længde(self):
         return math.sqrt(self.x**2 + self.y**2 + self.z**2)
 
-    def enhed_vektor(self):
+    def enhedsvektor(self):
         længde = self.længde()
         if længde == 0: return Vektor(0, 0)
         return Vektor(self.x/længde, self.y/længde, self.z/længde)
