@@ -11,13 +11,14 @@ class Figur:
         self.punkter = punkter
         self.centrum = sum(punkter, Punkt(0, 0)) / len(punkter)  # punkt som beskriver centrum af figuren
 
-        self.punkter = list(map(lambda punkt: punkt - self.centrum, self.punkter))  # justere figuren så origo er figurens centrum
-        self.punkter: list[Punkt] = self.sorterePunkterMedUret()
-        self.transformationer = [Matrix([[1,0],[0,1]])]
-        self.komposition = Matrix([[1,0],[0,1]])
+        # justere figuren så origo er figurens centrum i dens koordinatsystem
+        self.punkter = list(map(lambda punkt: punkt - self.centrum, self.punkter))
+        self.punkter: list[Punkt] = self.sorterePunkterMedUret() # så den kan tegnes
+        self.transformationer = [Matrix.IDENTITET_2D()]
+        self.komposition = Matrix.IDENTITET_2D()
 
     def fåPunkt(self, index):
-        return self.regnPunktTransformation(self.punkter[index]) + self.centrum
+        return self.tilVerden(self.punkter[index])
 
     def tilVerden(self, punkt: Punkt):
         return self.regnPunktTransformation(punkt) + self.centrum
@@ -66,7 +67,7 @@ class Figur:
         # tegn nye punkter på skærm
         tidligerePunkt = self.fåPunkt(0).tuple()
         pygame.draw.circle(canvas, farve, til_skærm(tidligerePunkt), 3)
-        for punkt in self.punkter:  # springer over første punkt
+        for punkt in self.punkter[1::]:  # springer over første punkt
             punkt = self.tilVerden(punkt).tuple()
 
             pygame.draw.circle(canvas, farve, til_skærm(punkt), 3)
@@ -80,6 +81,20 @@ class Figur:
 
         sorteretPunkter = sorted(self.punkter, key=vinkel_fra_midten, reverse=True)
         return sorteretPunkter
+
+    def get_rect(self):
+        x_max = 0
+        x_min = math.inf
+        y_max = 0
+        y_min = math.inf
+        for punkt in self.punkter:
+            x, y = til_skærm(self.tilVerden(punkt).tuple())
+            if x > x_max: x_max = x
+            if x < x_min: x_min = x
+            if y > y_max: y_max = y
+            if y < y_min: y_min = y
+
+        return (x_min, y_min, x_max - x_min, y_max - y_min)
 
 
 class Simplex:

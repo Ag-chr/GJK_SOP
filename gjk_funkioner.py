@@ -9,6 +9,7 @@ def support(figur1: Figur, figur2: Figur, r: Vektor) -> Punkt:
     p3 = p1 - p2
     return p3
 
+
 def minkowski(figur1: Figur, figur2: Figur, sum=True):
     minkowskiPunkter: list[Punkt] = []
 
@@ -31,9 +32,6 @@ def minkowski(figur1: Figur, figur2: Figur, sum=True):
             ydrePunkter.append(ydrePunkt)
 
     return Figur(ydrePunkter)
-
-
-
 
 
 if __name__ == '__main__':

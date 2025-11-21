@@ -6,7 +6,8 @@ import math
 from konstanter import *
 from pygameHelper import til_skærm
 from figurer import *
-from gjk_funkioner import support, minkowski
+from gjk_funkioner import minkowski
+from kollision import tjekKollisionGJK, tjekKollisionAABB
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -48,8 +49,8 @@ minkowskiFigur = minkowski(figur1, figur2, False)
 
 figurer.append(figur1)
 figurer.append(figur2)
-figurer.append(cirkel)
-figurer.append(minkowskiFigur)
+#figurer.append(cirkel)
+#figurer.append(minkowskiFigur)
 
 
 def start():
@@ -72,8 +73,8 @@ def start():
                 cirkel = Cirkel(5, Punkt(pos[0], pos[1]))
 
                 for figur in figurer:
-                    tjekKollision(cirkel, figur)
-                    if tjekKollision(Cirkel(1, Punkt(pos[0], pos[1])), figur):
+                    tjekKollisionGJK(cirkel, figur)
+                    if tjekKollisionGJK(Cirkel(1, Punkt(pos[0], pos[1])), figur):
                         holderFigur = True
                         holdtFigur = figur
                         break
@@ -98,43 +99,22 @@ def start():
             figur.tegn(canvas)
 
         kollision = False
-        for figur1 in figurer:
-            for figur2 in figurer:
-                if tjekKollision(figur1, figur2):
+        for i in range(len(figurer)):
+            for j in range(i+1, len(figurer)):
+                figur1 = figurer[i]
+                figur2 = figurer[j]
+
+                if tjekKollisionAABB(figur1, figur2, canvas):
                     kollision = True
                     figur1.tegn(canvas, (255, 0, 0))
                     figur2.tegn(canvas, (255, 0, 0))
+
         text = font.render(f"Kollision: {kollision}", True, (0, 0, 0))
 
         canvas.blit(text, text_rect)
         window.set_clip(pygame.Rect((0, 0), (VINDUEBREDDE, VINDUEHØJDE)))
         window.blit(canvas, (0, 0))
         pygame.display.update()
-
-
-def tjekKollision(figur1: Figur, figur2: Figur) -> bool:
-    simplex = Simplex()
-    # Der vælges en søge retning mod figur2 fra figur1
-    r = Vektor(figur2.centrum.x - figur1.centrum.x,
-               figur2.centrum.y - figur1.centrum.y).enhedsvektor()
-    # Får første minkowski difference punkt
-    simplex.tilføj(support(figur1,figur2, r))
-
-    r = -r # gør den anden retning for næste punkt
-
-    while True:
-        # tilføjer nyt punkt
-        simplex.tilføj(support(figur1, figur2, r))
-
-        # sikre at det nyeste tilføjet punkt faktisk passerede origo
-        if simplex.fåSeneste().dot(r) <= 0:
-            # det betyder at punktet passerede ikke origo
-            # dette betyder at det er umuligt at lave en trekant som indeholder origo
-            # da vi altid laver punkter på kanten af minkowski differencen
-            return False
-        else:
-            if simplex.indeholder(Punkt(0,0), r):
-                return True
 
 
 if __name__ == '__main__':

@@ -22,6 +22,9 @@ class Matrix:
                 søjle.append(self.matrix[j][i])
             yield søjle
 
+    @staticmethod
+    def IDENTITET_2D():
+        return Matrix([[1,0],[0,1]])
 
     def __repr__(self):
         s = "Matrix(\n"
