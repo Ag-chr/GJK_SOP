@@ -26,21 +26,18 @@ def tjekKollisionGJK(figur1: Figur, figur2: Figur) -> bool:
             if simplex.indeholder(Punkt(0,0), r):
                 return True
 
+def tjekKollisionAABB(figur1: Figur, figur2: Figur) -> bool:
+    min1, max1 = figur1.få_min_max()
+    min2, max2 = figur2.få_min_max()
 
-def tjekKollisionAABB(figur1: Figur, figur2: Figur, canvas) -> bool:
-    rect1 = figur1.get_rect()
-    x1, y1, bredde1, højde1 = rect1
-    pygame.draw.rect(canvas, (0, 0, 255), rect1, 2)
+    d1x = min2.x - max1.x
+    d1y = min2.y - max1.y
+    d2x = min1.x - max2.x
+    d2y = min1.y - max2.y
 
-
-    rect2 = figur2.get_rect()
-    x2, y2, bredde2, højde2 = rect2
-    pygame.draw.rect(canvas, (0,0,255), rect2, 2)
-
-    if (x1 < x2 + bredde2 and
-        x1 + bredde1 > x2 and
-        y1 < y2 + højde2 and
-        y1 + højde1 > y2):
-        return True
-    else:
+    if d1x > 0 or d1y > 0:
         return False
+    if d2x > 0 or d2y > 0:
+        return False
+
+    return True

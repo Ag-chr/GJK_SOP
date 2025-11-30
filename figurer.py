@@ -82,7 +82,7 @@ class Figur:
         sorteretPunkter = sorted(self.punkter, key=vinkel_fra_midten, reverse=True)
         return sorteretPunkter
 
-    def get_rect(self):
+    def få_min_max(self):
         x_max = 0
         x_min = math.inf
         y_max = 0
@@ -94,7 +94,7 @@ class Figur:
             if y > y_max: y_max = y
             if y < y_min: y_min = y
 
-        return (x_min, y_min, x_max - x_min, y_max - y_min)
+        return Punkt(x_min, y_min), Punkt(x_max, y_max)
 
 
 class Simplex:

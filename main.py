@@ -104,7 +104,7 @@ def start():
                 figur1 = figurer[i]
                 figur2 = figurer[j]
 
-                if tjekKollisionAABB(figur1, figur2, canvas):
+                if tjekKollisionAABB(figur1, figur2):
                     kollision = True
                     figur1.tegn(canvas, (255, 0, 0))
                     figur2.tegn(canvas, (255, 0, 0))
