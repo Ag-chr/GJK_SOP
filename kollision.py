@@ -10,7 +10,7 @@ def tjekKollisionGJK(figur1: Figur, figur2: Figur) -> bool:
     # Får første minkowski difference punkt
     simplex.tilføj(support(figur1,figur2, r))
 
-    r = -r # gør den anden retning for næste punkt
+    r = -r # går den modsatte retning for næste punkt
 
     while True:
         # tilføjer nyt punkt

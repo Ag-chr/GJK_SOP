@@ -5,6 +5,7 @@ import pygame
 from matrix import Matrix
 from position import Punkt, Vektor, vektorTripelProdukt
 from pygameHelper import til_skærm
+from konstanter import ZOOM
 
 class Figur:
     def __init__(self, punkter: [Punkt]):
@@ -65,16 +66,17 @@ class Figur:
         # beregn transformation for punkter
 
         # tegn nye punkter på skærm
-        tidligerePunkt = self.fåPunkt(0).tuple()
+        tidligerePunkt = (self.fåPunkt(0) * ZOOM).tuple()
         pygame.draw.circle(canvas, farve, til_skærm(tidligerePunkt), 3)
         for punkt in self.punkter[1::]:  # springer over første punkt
-            punkt = self.tilVerden(punkt).tuple()
+            punkt = (self.tilVerden(punkt) * ZOOM).tuple()
+
 
             pygame.draw.circle(canvas, farve, til_skærm(punkt), 3)
             pygame.draw.line(canvas, farve, til_skærm(tidligerePunkt), til_skærm(punkt), 2)
 
             tidligerePunkt = punkt
-        pygame.draw.line(canvas, farve, til_skærm(tidligerePunkt), til_skærm(self.fåPunkt(0).tuple()), 2)
+        pygame.draw.line(canvas, farve, til_skærm(tidligerePunkt), til_skærm((self.fåPunkt(0) * ZOOM).tuple()), 2)
 
     def sorterePunkterMedUret(self):
         vinkel_fra_midten = lambda p: math.atan2(p.y, p.x)
@@ -121,7 +123,7 @@ class Simplex:
     def indeholder(self, punkt: Punkt, r: Vektor):
         a = self.fåSeneste()
 
-        ao = Punkt(0,0) - a
+        ao = punkt - a
         if (len(self.punkter) == 3):
             b = self.fåB()
             c = self.fåC()
@@ -132,13 +134,16 @@ class Simplex:
             abVinkelret = vektorTripelProdukt(ac, ab, ab)
             acVinkelret = vektorTripelProdukt(ab, ac, ac)
 
+            # hvis origo er ud mod linje ab så fjernes c og der gås videre i denne retning
             if abVinkelret.dot(ao) > 0:
                 self.fjern(c)
                 r.sæt(abVinkelret)
             else:
+                # hvis origo er ud mod linje ac så fjernes b og der gås videre i denne retning
                 if acVinkelret.dot(ao) > 0:
                     self.fjern(b)
                     r.sæt(acVinkelret)
+                # hvis der nås hertil betyder det at origo er inde i trekant og dermed krydser figurerne
                 else:
                     return True
 
