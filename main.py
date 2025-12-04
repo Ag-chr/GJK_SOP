@@ -1,14 +1,16 @@
 import array
+import random
 
 import pygame
 import math
+import pickle
 
 from konstanter import *
 from pygameHelper import til_skærm
 from figurer import *
 from gjk_funkioner import minkowski
 from kollision import tjekKollisionGJK, tjekKollisionAABB
-from teste import random_convex_polygon
+from tilfældig_figur import random_convex_polygon
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -18,8 +20,8 @@ scale = VINDUEHØJDE / 100
 canvas = pygame.Surface((VINDUEBREDDE, VINDUEHØJDE))
 font = pygame.font.Font(None, 36)
 
-text = font.render(f"Kollision: {False}", True, (0, 0, 0))
-text_rect = text.get_rect(topleft=(10, 10))
+text_kollision = font.render(f"Kollision: {False}", True, (0, 0, 0))
+text_rect_kollision = text_kollision.get_rect(topleft=(10, 10))
 
 figurer = []
 
@@ -33,16 +35,21 @@ figur2 = Figur([Punkt(5, 7), Punkt(10, 2), Punkt(12, 7), Punkt(7, 3)])
 cirkel = Cirkel(30, Punkt(0,100))
 
 
-minkowskiFigur = minkowski(figur1, figur2, False)
 
 
-figurer.append(figur1)
-figurer.append(figur2)
+#figurer.append(figur1)
+#figurer.append(figur2)
 #figurer.append(cirkel)
+
+minkowskiFigur = minkowski(figur1, figur2, False)
 #figurer.append(minkowskiFigur)
 
+testFigurer: list[(Figur, Figur)] = []
+
+filnavn = "10kant.pkl"
 
 def start():
+    global testFigurer
     holdtFigur = None
 
     running = True
@@ -51,11 +58,34 @@ def start():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
 
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
-                figurer.append(random_convex_polygon(5))
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    fig = random_convex_polygon(5, scale=random.uniform(2.5, 5.5), max_attempts=20)
+                    fig.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
+                    figurer.append(fig)
+
+                elif event.key == pygame.K_p:
+                    figurer.pop()
+                elif event.key == pygame.K_o:
+                    testFigurer.append((figurer.pop(), figurer.pop()))
+                elif event.key == pygame.K_s:
+                    print("save")
+                    with open(filnavn, "wb") as f:
+                        pickle.dump(testFigurer, f)
+                elif event.key == pygame.K_l:
+                    with open(filnavn, "rb") as f:
+                        data = pickle.load(f)
+                        print(len(data))
+                        print(len(data[0]))
+                elif event.key == pygame.K_h:
+                    with open(filnavn, "rb") as f:
+                        testFigurer = pickle.load(f)
+
+
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mouse_pos = list(event.pos)
@@ -100,9 +130,17 @@ def start():
                     figur1.tegn(canvas, (255, 0, 0))
                     figur2.tegn(canvas, (255, 0, 0))
 
-        text = font.render(f"Kollision: {kollision}", True, (0, 0, 0))
+        text_kollision = font.render(f"Kollision: {kollision}", True, (0, 0, 0))
 
+        text = font.render(f"størrelse: {len(testFigurer)}", True, (0, 0, 0))
+        text_rect = text.get_rect(topleft=(10, 40))
         canvas.blit(text, text_rect)
+
+        text = font.render(f"filnavn: {filnavn}", True, (0, 0, 0))
+        text_rect = text.get_rect(topleft=(10, 70))
+        canvas.blit(text, text_rect)
+
+        canvas.blit(text_kollision, text_rect_kollision)
         window.set_clip(pygame.Rect((0, 0), (VINDUEBREDDE, VINDUEHØJDE)))
         window.blit(canvas, (0, 0))
         pygame.display.update()

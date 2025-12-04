@@ -180,6 +180,18 @@ class Cirkel(Figur):
 
 
 
+class RegulærPolygon(Figur):
+    def __init__(self, antal_punkter, størrelse):
+        grader_mellem_punkter = math.radians(360) / antal_punkter
+        punkter = []
+        for i in range(antal_punkter):
+            x = math.cos(i*grader_mellem_punkter +grader_mellem_punkter/2 - math.radians(90)) * størrelse
+            y = math.sin(i*grader_mellem_punkter +grader_mellem_punkter/2 - math.radians(90)) * størrelse
+
+            punkter.append(Punkt(x,y))
+
+        super().__init__(punkter)
+
 
 if __name__ == '__main__':
     figur = Figur([Punkt(0,0), Punkt(2,0), Punkt(2,2), Punkt(0,2)])

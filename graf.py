@@ -7,10 +7,15 @@ import timeit
 import tracemalloc
 import time
 import threading
+import pickle
 
 import matplotlib
 matplotlib.use("TkAgg")  # or "Qt5Agg" if you prefer
 import matplotlib.pyplot as plt
+
+from kollision import tjekKollisionGJK
+from tilfældig_figur import random_convex_polygon
+
 
 def plot_bar_from_csv(filename, x_column, y_column, title="Bar Chart"):
     """Plot a bar chart from a CSV file using the given x and y column names."""
@@ -35,30 +40,6 @@ def plot_bar_from_csv(filename, x_column, y_column, title="Bar Chart"):
     plt.show()
 
 
-
-def gemTilCsv(path):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            data = func(*args, **kwargs)
-            fieldnames = data[0].keys()
-
-            skrivHeader = False
-            if not os.path.exists(path):
-                skrivHeader = True
-
-            with open(path, "a", newline="") as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                if skrivHeader:
-                    writer.writeheader()
-                writer.writerows(data)
-            return data
-
-        return wrapper
-    return decorator
-
-
-
 def average_speed(func, runs=5, *args, **kwargs):
     """
     Measures average execution time of a function over multiple runs using timeit.
@@ -75,6 +56,7 @@ def average_speed(func, runs=5, *args, **kwargs):
     total_time = timeit.timeit(wrapper, number=runs)
     avg_time = total_time / runs
     return avg_time
+
 
 def average_memory(func, runs=5, interval=0.001, *args, **kwargs):
     """
@@ -132,26 +114,126 @@ def benchmark(iterationer, beskrivelse=""):
     return decorator
 
 
+def gemTilCsv(path, data: list[dict]):
+    fieldnames = data[0].keys()
+
+    skrivHeader = False
+    if not os.path.exists(path):
+        skrivHeader = True
+
+    with open(path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        if skrivHeader:
+            writer.writeheader()
+        writer.writerows(data)
+
+
+import random
+from position import Punkt
+def genererDatasæt(kanter, mængde, savePath):
+    testFigurer: list = []
+    for i in range(mængde):
+        figur1 = random_convex_polygon(kanter, scale=random.uniform(2.5, 5.5))
+        figur1.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
+        figur2 = random_convex_polygon(kanter, scale=random.uniform(2.5, 5.5))
+        figur2.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
+        testFigurer.append((figur1, figur2))
+
+    with open(savePath, "wb") as f:
+        pickle.dump(testFigurer, f)
+
+
+def testDatasæt(dataPath, savePath):
+    data = None
+    with open(dataPath, "rb") as f:
+        data = pickle.load(f)
+
+    res = []
+    for (i, dataPunkt) in enumerate(data):
+        krydser = tjekKollisionGJK(dataPunkt[0], dataPunkt[1])
+        middelTid = average_speed(tjekKollisionGJK, 1, dataPunkt[0], dataPunkt[1])
+        res.append({"num": i, "middelTid": middelTid, "krydser": krydser})
+
+    gemTilCsv(savePath, res)
+
+
+def fåFilnavne(mappePath, filter_func=lambda _: True):
+    filer = []
+    for (dirpath, dirnames, filenames) in walk(mappePath):
+        filer.extend(filenames)
+        break
+    return [fil for fil in filter(filter_func, filer)]
+
+from os import walk
+def testDatasætIMappe(mappePath):
+
+    os.mkdir(f"{mappePath} - resultat")
+    pklFiler = fåFilnavne(mappePath, lambda navn: navn.find(".pkl") != -1)
+    for datasæt in pklFiler:
+        testDatasæt(f"{mappePath}/{datasæt}", f"{mappePath} - resultat/{datasæt[:-4]}.csv")
+
+
+import numpy as np
+
+def genererGraf(mappePath, savePath):
+    csvFiler = fåFilnavne(mappePath, lambda navn: navn.find(".csv") != -1)
+    print(csvFiler)
+
+    x = []
+    y = []
+
+    for csvFil in csvFiler:
+        with open(f"{mappePath}/{csvFil}", "r") as f:
+            reader = csv.DictReader(f)
+            y_values = [float(row["middelTid"]) for row in reader]
+            x_values = [int(csvFil[:-8]) for _ in y_values]
+
+            x.extend(x_values)
+            y.extend(y_values)
+
+    x = np.array(x)
+    y = np.array(y)
+
+    # Scatter plot
+    plt.scatter(x, y)
+
+    # Regression (line of best fit)
+    m, b = np.polyfit(x, y, 1)  # 1 = lineær model
+    plt.plot(x, m*x + b, color='red', label=f'y = {m:.2e}x + {b:.2e}')
+
+    # Beregn R^2
+    y_pred = m * x + b
+    ss_res = np.sum((y - y_pred) ** 2)
+    ss_tot = np.sum((y - np.mean(y)) ** 2)
+    r_squared = 1 - (ss_res / ss_tot)
+    plt.title(f'Regression med R² = {r_squared:.3f}')
+
+    plt.legend()
+    plt.show()
+
+
 if __name__ == '__main__':
-    testdata = [
-        {"x": 1, "y": 2, "a": 1},
-        {"x": 2, "y": 3, "a": 2},
-        {"x": 3, "y": 4, "a": 2}
-    ]
 
-    @gemTilCsv("output.csv")
-    def testCsv(data):
-        return data
+    #for kanter in range(53, 101):
+     #   print("i gang med at generer", kanter, "kanter")
+      #  genererDatasæt(kanter, 1000, f"data/{kanter}kant.pkl")
 
-    @gemTilCsv("outputTest.csv")
-    @benchmark(1, )
-    def testBenchmark():
-        a = [i for i in range(1000000)]
-        time.sleep(0.5)  # simulate work
-        return sum(a)
+    #print("tester data...")
+    #testDatasætIMappe("testData")
+    #print("færdig :)")
 
-    #print("Csv: ", testCsv(testdata))
-    #print("benchmark:", testBenchmark())
+    genererGraf("data - resultat", "a")
 
-    plot_bar_from_csv("output.csv", "x", "y")
+    with open("test.csv", "r") as f:
+        reader = csv.DictReader(f)
+        column_values = [row["middelTid"] for row in reader]
+        print(column_values)
+
+
+
+    #genererDatasæt(3, 1000, "test/3kant.pkl")
+    #testDatasæt("testData/3kant.pkl", "test.csv")
+
+
+
 
