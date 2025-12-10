@@ -8,7 +8,7 @@ from pygameHelper import til_skærm
 from konstanter import ZOOM
 
 class Figur:
-    def __init__(self, punkter: [Punkt]):
+    def __init__(self, punkter: list[Punkt]):
         self.punkter = punkter
         self.centrum = sum(punkter, Punkt(0, 0)) / len(punkter)  # punkt som beskriver centrum af figuren
 
@@ -28,7 +28,8 @@ class Figur:
         PunktLængstVæk = self.punkter[0]
         maksSkalar = 0
         for punkt in self.punkter:
-            skalarProdukt = punkt.dot(r)
+            punkt_trans = self.regnPunktTransformation(punkt)
+            skalarProdukt = punkt_trans.dot(r)
             if skalarProdukt > maksSkalar:
                 maksSkalar = skalarProdukt
                 PunktLængstVæk = punkt
@@ -168,14 +169,23 @@ class Cirkel(Figur):
 
 
     def tegn(self, canvas, farve=(0,0,0)):
-        pygame.draw.circle(canvas, farve, til_skærm(self.centrum.tuple()), self.radius, 2)
+        x_tidligere = self.radius * math.cos(0)
+        y_tidligere = self.radius * math.sin(0)
+        for vinkel in range(5, 360, 5):
+            x = self.radius * math.cos(vinkel)
+            y = self.radius * math.sin(vinkel)
+            pygame.draw.line(canvas, farve, (x_tidligere, y_tidligere), (x, y))
+            x_tidligere = x
+            y_tidligere = y
+
+        pygame.draw.circle(canvas, farve, til_skærm(self.centrum.tuple()*ZOOM), self.radius, 2)
 
     def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
         _, vinkel = r.polær_vektor()
         x = self.radius * math.cos(vinkel)
         y = self.radius * math.sin(vinkel)
 
-        return Punkt(x, y) + self.centrum
+        return self.tilVerden(Punkt(x, y))
 
 
 

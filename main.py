@@ -26,20 +26,20 @@ text_rect_kollision = text_kollision.get_rect(topleft=(10, 10))
 figurer = []
 
 rotate = Matrix([
-    [math.cos(math.degrees(30)), -math.sin(math.degrees(30))],
-    [math.sin(math.degrees(30)), math.cos(math.degrees(30))]
+    [math.cos(math.degrees(360)), -math.sin(360)],
+    [math.sin(math.degrees(360)), math.cos(math.degrees(360))]
 ])
 
 figur1 = Figur([Punkt(4,11), Punkt(9,9), Punkt(4,5)])
 figur2 = Figur([Punkt(5, 7), Punkt(10, 2), Punkt(12, 7), Punkt(7, 3)])
-cirkel = Cirkel(30, Punkt(0,100))
+cirkel = Cirkel(30, Punkt(0,5))
 
 
+figur1.tilføjTransformation(rotate)
 
-
-#figurer.append(figur1)
-#figurer.append(figur2)
-#figurer.append(cirkel)
+figurer.append(figur1)
+figurer.append(figur2)
+figurer.append(cirkel)
 
 minkowskiFigur = minkowski(figur1, figur2, False)
 #figurer.append(minkowskiFigur)

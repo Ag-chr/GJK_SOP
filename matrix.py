@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 class Matrix:
-    def __init__(self, matrix: [[float]]):
+    def __init__(self, matrix: list[list[float]]):
         if type(matrix) != list and type(matrix[0]) != list and type(matrix[0][0]) not in [float, int]:
             raise "matrix er ikke en nested list af floats"
         self.matrix = matrix
