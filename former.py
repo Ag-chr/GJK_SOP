@@ -24,7 +24,7 @@ class Form:
     def tilVerden(self, punkt: Punkt):
         return self.regnPunktTransformation(punkt) + self.centrum
 
-    def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
+    def støttefunktion(self, r: Vektor) -> Punkt:
         PunktLængstVæk = self.punkter[0]
         maksSkalar = 0
         for punkt in self.punkter:
@@ -100,7 +100,7 @@ class Form:
         return Punkt(x_min, y_min), Punkt(x_max, y_max)
 
 
-class Simplex:
+class Simpleks:
     def __init__(self):
         self.punkter = []
 
@@ -169,25 +169,27 @@ class Cirkel(Form):
 
 
     def tegn(self, canvas, farve=(0,0,0)):
-        x_tidligere = self.radius * math.cos(0)
-        y_tidligere = self.radius * math.sin(0)
-        for vinkel in range(5, 360, 5):
-            x = self.radius * math.cos(vinkel)
-            y = self.radius * math.sin(vinkel)
-            pygame.draw.line(canvas, farve, (x_tidligere, y_tidligere), (x, y))
-            x_tidligere = x
-            y_tidligere = y
+        x_tidligere = self.radius * math.cos(math.radians(0))
+        y_tidligere = self.radius * math.sin(math.radians(0))
+        p_tidligere = self.tilVerden(Punkt(x_tidligere, y_tidligere))
+        p_tidligere = til_skærm((p_tidligere * ZOOM).tuple())
 
-        pygame.draw.circle(canvas, farve, til_skærm(self.centrum.tuple()*ZOOM), self.radius, 2)
+        for vinkel in range(5, 365, 5):
+            x = self.radius * math.cos(math.radians(vinkel))
+            y = self.radius * math.sin(math.radians(vinkel))
+            p =  self.tilVerden(Punkt(x, y))
+            p = til_skærm((p * ZOOM).tuple())
 
-    def fåPunktLængstVækIEnRetning(self, r: Vektor) -> Punkt:
+            pygame.draw.line(canvas, farve, p_tidligere, p, 2)
+            p_tidligere = p
+
+    def støttefunktion(self, r: Vektor) -> Punkt:
         _, vinkel = r.polær_vektor()
         x = self.radius * math.cos(vinkel)
         y = self.radius * math.sin(vinkel)
 
         return self.tilVerden(Punkt(x, y))
-
-
+        #return Punkt(x, y) + self.centrum
 
 
 class RegulærPolygon(Form):

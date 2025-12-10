@@ -1,20 +1,20 @@
 from former import *
-from gjk_funkioner import support
+from gjk_funkioner import støtte
 import pygame
 
 def tjekKollisionGJK(form1: Form, form2: Form) -> bool:
-    simplex = Simplex()
+    simplex = Simpleks()
     # Der vælges en søge retning mod form2 fra form1
     r = Vektor(form2.centrum.x - form1.centrum.x,
                form2.centrum.y - form1.centrum.y).enhedsvektor()
     # Får første minkowski difference punkt
-    simplex.tilføj(support(form1,form2, r))
+    simplex.tilføj(støtte(form1, form2, r))
 
     r = -r # går den modsatte retning for næste punkt
 
     while True:
         # tilføjer nyt punkt
-        simplex.tilføj(support(form1, form2, r))
+        simplex.tilføj(støtte(form1, form2, r))
 
         # sikre at det nyeste tilføjet punkt faktisk passerede origo
         if simplex.fåSeneste().dot(r) <= 0:

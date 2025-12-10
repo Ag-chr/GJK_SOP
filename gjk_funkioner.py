@@ -1,9 +1,9 @@
-from former import Form, Vektor, Punkt, Simplex
+from former import Form, Vektor, Punkt, Simpleks
 
 
-def support(form1: Form, form2: Form, r: Vektor) -> Punkt:
-    p1 = form1.fåPunktLængstVækIEnRetning(r)
-    p2 = form2.fåPunktLængstVækIEnRetning(-r)
+def støtte(form1: Form, form2: Form, r: Vektor) -> Punkt:
+    p1 = form1.støttefunktion(r)
+    p2 = form2.støttefunktion(-r)
 
     # minkowski difference udføres
     p3 = p1 - p2
@@ -27,7 +27,7 @@ def minkowski(form1: Form, form2: Form, sum=True):
     ydrePunkter = []
     for punkt in minkowskiForm.punkter:
         retning = punkt.tilStedVektor().enhedsvektor()
-        ydrePunkt = minkowskiForm.fåPunktLængstVækIEnRetning(retning)
+        ydrePunkt = minkowskiForm.støttefunktion(retning)
         if ydrePunkt not in ydrePunkter:
             ydrePunkter.append(ydrePunkt)
 
@@ -43,5 +43,5 @@ if __name__ == '__main__':
     r = Vektor(-1, 0)
     # print(support(form1, form2, r)) # skal give (-8, -2)
     r = Vektor(0, 1)
-    print(support(form1, form2, r))  # skal give (-6, 9)
+    print(støtte(form1, form2, r))  # skal give (-6, 9)
 

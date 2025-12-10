@@ -29,17 +29,22 @@ rotate = Matrix([
     [math.cos(math.degrees(360)), -math.sin(360)],
     [math.sin(math.degrees(360)), math.cos(math.degrees(360))]
 ])
+stræk = Matrix([
+    [2, 0],
+    [0, 1]
+])
 
 form1 = Form([Punkt(4, 11), Punkt(9, 9), Punkt(4, 5)])
 form2 = Form([Punkt(5, 7), Punkt(10, 2), Punkt(12, 7), Punkt(7, 3)])
-cirkel = Cirkel(30, Punkt(0,5))
 
+cirkel = Cirkel(3, Punkt(0,5))
+cirkel.tilføjTransformation(stræk)
 
 form1.tilføjTransformation(rotate)
 
 former.append(form1)
 former.append(form2)
-#former.append(cirkel)
+former.append(cirkel)
 
 minkowskiForm = minkowski(form1, form2, False)
 #former.append(minkowskiForm)
