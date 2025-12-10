@@ -1,7 +1,7 @@
 import random
 import math
 
-from figurer import Figur
+from former import Form
 from position import Punkt
 
 def cross(o, a, b):
@@ -50,7 +50,7 @@ def random_convex_polygon(n, scale=1.0, max_attempts=6):
             indices = [int(i * L / n) for i in range(n)]
             polygon = [hull[idx % L] for idx in indices]
             polygon = list(map(lambda p: Punkt(p[0], p[1]), polygon))
-            return Figur(polygon)
+            return Form(polygon)
 
     print("fallback")
     # Fallback: inscribe points on a rotated, scaled circle (always convex)
@@ -77,7 +77,7 @@ def random_convex_polygon(n, scale=1.0, max_attempts=6):
         # translate
         transformed.append(Punkt(xr + tx, yr + ty))
 
-    return Figur(transformed)
+    return Form(transformed)
 
 # Example usage:
 if __name__ == "__main__":

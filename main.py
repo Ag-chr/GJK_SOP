@@ -7,10 +7,10 @@ import pickle
 
 from konstanter import *
 from pygameHelper import til_skærm
-from figurer import *
+from former import *
 from gjk_funkioner import minkowski
 from kollision import tjekKollisionGJK, tjekKollisionAABB
-from tilfældig_figur import random_convex_polygon
+from tilfældig_form import random_convex_polygon
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -23,34 +23,34 @@ font = pygame.font.Font(None, 36)
 text_kollision = font.render(f"Kollision: {False}", True, (0, 0, 0))
 text_rect_kollision = text_kollision.get_rect(topleft=(10, 10))
 
-figurer = []
+former = []
 
 rotate = Matrix([
     [math.cos(math.degrees(360)), -math.sin(360)],
     [math.sin(math.degrees(360)), math.cos(math.degrees(360))]
 ])
 
-figur1 = Figur([Punkt(4,11), Punkt(9,9), Punkt(4,5)])
-figur2 = Figur([Punkt(5, 7), Punkt(10, 2), Punkt(12, 7), Punkt(7, 3)])
+form1 = Form([Punkt(4, 11), Punkt(9, 9), Punkt(4, 5)])
+form2 = Form([Punkt(5, 7), Punkt(10, 2), Punkt(12, 7), Punkt(7, 3)])
 cirkel = Cirkel(30, Punkt(0,5))
 
 
-figur1.tilføjTransformation(rotate)
+form1.tilføjTransformation(rotate)
 
-figurer.append(figur1)
-figurer.append(figur2)
-figurer.append(cirkel)
+former.append(form1)
+former.append(form2)
+#former.append(cirkel)
 
-minkowskiFigur = minkowski(figur1, figur2, False)
-#figurer.append(minkowskiFigur)
+minkowskiForm = minkowski(form1, form2, False)
+#former.append(minkowskiForm)
 
-testFigurer: list[(Figur, Figur)] = []
+testFormer: list[(Form, Form)] = []
 
 filnavn = "10kant.pkl"
 
 def start():
-    global testFigurer
-    holdtFigur = None
+    global testFormer
+    holdtForm = None
 
     running = True
     while running:
@@ -64,18 +64,18 @@ def start():
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
-                    fig = random_convex_polygon(5, scale=random.uniform(2.5, 5.5), max_attempts=20)
-                    fig.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
-                    figurer.append(fig)
+                    form = random_convex_polygon(5, scale=random.uniform(2.5, 5.5), max_attempts=20)
+                    form.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
+                    former.append(form)
 
                 elif event.key == pygame.K_p:
-                    figurer.pop()
+                    former.pop()
                 elif event.key == pygame.K_o:
-                    testFigurer.append((figurer.pop(), figurer.pop()))
+                    testFormer.append((former.pop(), former.pop()))
                 elif event.key == pygame.K_s:
                     print("save")
                     with open(filnavn, "wb") as f:
-                        pickle.dump(testFigurer, f)
+                        pickle.dump(testFormer, f)
                 elif event.key == pygame.K_l:
                     with open(filnavn, "rb") as f:
                         data = pickle.load(f)
@@ -83,7 +83,7 @@ def start():
                         print(len(data[0]))
                 elif event.key == pygame.K_h:
                     with open(filnavn, "rb") as f:
-                        testFigurer = pickle.load(f)
+                        testFormer = pickle.load(f)
 
 
 
@@ -95,19 +95,19 @@ def start():
                 mouse_pos[1] /= ZOOM
                 cirkel = Cirkel(1, Punkt(mouse_pos[0], mouse_pos[1]))
 
-                for figur in figurer:
-                    tjekKollisionGJK(cirkel, figur)
-                    if tjekKollisionGJK(Cirkel(1, Punkt(mouse_pos[0], mouse_pos[1])), figur):
-                        holdtFigur = figur
+                for form in former:
+                    tjekKollisionGJK(cirkel, form)
+                    if tjekKollisionGJK(Cirkel(1, Punkt(mouse_pos[0], mouse_pos[1])), form):
+                        holdtForm = form
                         break
 
             if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
-                holdtFigur = None
+                holdtForm = None
 
-            elif event.type == pygame.MOUSEMOTION and holdtFigur is not None:
+            elif event.type == pygame.MOUSEMOTION and holdtForm is not None:
                 bevægelse = event.rel
-                holdtFigur.centrum.x += bevægelse[0] / ZOOM
-                holdtFigur.centrum.y -= bevægelse[1] / ZOOM
+                holdtForm.centrum.x += bevægelse[0] / ZOOM
+                holdtForm.centrum.y -= bevægelse[1] / ZOOM
 
         canvas.fill((255, 255, 255))
         pygame.draw.line(canvas, (100, 100, 100), (0, VINDUEHØJDE / 2), (VINDUEBREDDE, VINDUEHØJDE / 2),
@@ -116,23 +116,23 @@ def start():
                          2)  # y akse
         #pygame.draw.circle(canvas, (0, 0, 0), (VINDUEBREDDE / 2, VINDUEHØJDE / 2), 10)  # origo
 
-        for figur in figurer:
-            figur.tegn(canvas)
+        for form in former:
+            form.tegn(canvas)
 
         kollision = False
-        for i in range(len(figurer)):
-            for j in range(i+1, len(figurer)):
-                figur1 = figurer[i]
-                figur2 = figurer[j]
+        for i in range(len(former)):
+            for j in range(i+1, len(former)):
+                form1 = former[i]
+                form2 = former[j]
 
-                if tjekKollisionGJK(figur1, figur2):
+                if tjekKollisionGJK(form1, form2):
                     kollision = True
-                    figur1.tegn(canvas, (255, 0, 0))
-                    figur2.tegn(canvas, (255, 0, 0))
+                    form1.tegn(canvas, (255, 0, 0))
+                    form2.tegn(canvas, (255, 0, 0))
 
         text_kollision = font.render(f"Kollision: {kollision}", True, (0, 0, 0))
 
-        text = font.render(f"størrelse: {len(testFigurer)}", True, (0, 0, 0))
+        text = font.render(f"størrelse: {len(testFormer)}", True, (0, 0, 0))
         text_rect = text.get_rect(topleft=(10, 40))
         canvas.blit(text, text_rect)
 

@@ -1,20 +1,20 @@
-from figurer import *
+from former import *
 from gjk_funkioner import support
 import pygame
 
-def tjekKollisionGJK(figur1: Figur, figur2: Figur) -> bool:
+def tjekKollisionGJK(form1: Form, form2: Form) -> bool:
     simplex = Simplex()
-    # Der vælges en søge retning mod figur2 fra figur1
-    r = Vektor(figur2.centrum.x - figur1.centrum.x,
-               figur2.centrum.y - figur1.centrum.y).enhedsvektor()
+    # Der vælges en søge retning mod form2 fra form1
+    r = Vektor(form2.centrum.x - form1.centrum.x,
+               form2.centrum.y - form1.centrum.y).enhedsvektor()
     # Får første minkowski difference punkt
-    simplex.tilføj(support(figur1,figur2, r))
+    simplex.tilføj(support(form1,form2, r))
 
     r = -r # går den modsatte retning for næste punkt
 
     while True:
         # tilføjer nyt punkt
-        simplex.tilføj(support(figur1, figur2, r))
+        simplex.tilføj(support(form1, form2, r))
 
         # sikre at det nyeste tilføjet punkt faktisk passerede origo
         if simplex.fåSeneste().dot(r) <= 0:
@@ -26,9 +26,9 @@ def tjekKollisionGJK(figur1: Figur, figur2: Figur) -> bool:
             if simplex.indeholder(Punkt(0,0), r):
                 return True
 
-def tjekKollisionAABB(figur1: Figur, figur2: Figur) -> bool:
-    min1, max1 = figur1.få_min_max()
-    min2, max2 = figur2.få_min_max()
+def tjekKollisionAABB(form1: Form, form2: Form) -> bool:
+    min1, max1 = form1.få_min_max()
+    min2, max2 = form2.få_min_max()
 
     d1x = min2.x - max1.x
     d1y = min2.y - max1.y

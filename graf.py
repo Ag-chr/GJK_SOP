@@ -14,7 +14,7 @@ matplotlib.use("TkAgg")  # or "Qt5Agg" if you prefer
 import matplotlib.pyplot as plt
 
 from kollision import tjekKollisionGJK
-from tilfældig_figur import random_convex_polygon
+from tilfældig_form import random_convex_polygon
 
 
 def plot_bar_from_csv(filename, x_column, y_column, title="Bar Chart"):
@@ -131,16 +131,16 @@ def gemTilCsv(path, data: list[dict]):
 import random
 from position import Punkt
 def genererDatasæt(kanter, mængde, savePath):
-    testFigurer: list = []
+    testFormer: list = []
     for i in range(mængde):
-        figur1 = random_convex_polygon(kanter, scale=random.uniform(2.5, 5.5))
-        figur1.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
-        figur2 = random_convex_polygon(kanter, scale=random.uniform(2.5, 5.5))
-        figur2.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
-        testFigurer.append((figur1, figur2))
+        Form1 = random_convex_polygon(kanter, scale=random.uniform(2.5, 5.5))
+        Form1.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
+        Form2 = random_convex_polygon(kanter, scale=random.uniform(2.5, 5.5))
+        Form2.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
+        testFormer.append((Form1, Form2))
 
     with open(savePath, "wb") as f:
-        pickle.dump(testFigurer, f)
+        pickle.dump(testFormer, f)
 
 
 def testDatasæt(dataPath, savePath):

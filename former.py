@@ -7,12 +7,12 @@ from position import Punkt, Vektor, vektorTripelProdukt
 from pygameHelper import til_skærm
 from konstanter import ZOOM
 
-class Figur:
+class Form:
     def __init__(self, punkter: list[Punkt]):
         self.punkter = punkter
-        self.centrum = sum(punkter, Punkt(0, 0)) / len(punkter)  # punkt som beskriver centrum af figuren
+        self.centrum = sum(punkter, Punkt(0, 0)) / len(punkter)  # punkt som beskriver centrum af formen
 
-        # justere figuren så origo er figurens centrum i dens koordinatsystem
+        # justere formen så origo er formens centrum i dens koordinatsystem
         self.punkter = list(map(lambda punkt: punkt - self.centrum, self.punkter))
         self.punkter: list[Punkt] = self.sorterePunkterMedUret() # så den kan tegnes
         self.transformationer = [Matrix.IDENTITET_2D()]
@@ -144,7 +144,7 @@ class Simplex:
                 if acVinkelret.dot(ao) > 0:
                     self.fjern(b)
                     r.sæt(acVinkelret)
-                # hvis der nås hertil betyder det at origo er inde i trekant og dermed krydser figurerne
+                # hvis der nås hertil betyder det at origo er inde i trekant og dermed krydser formerne
                 else:
                     return True
 
@@ -161,7 +161,7 @@ class Simplex:
         return f"Punkter: {self.punkter}"
 
 
-class Cirkel(Figur):
+class Cirkel(Form):
     def __init__(self, radius, pos: Punkt):
         super().__init__([Punkt(0, 0)])
         self.centrum = pos
@@ -190,7 +190,7 @@ class Cirkel(Figur):
 
 
 
-class RegulærPolygon(Figur):
+class RegulærPolygon(Form):
     def __init__(self, antal_punkter, størrelse):
         grader_mellem_punkter = math.radians(360) / antal_punkter
         punkter = []
@@ -204,15 +204,15 @@ class RegulærPolygon(Figur):
 
 
 if __name__ == '__main__':
-    figur = Figur([Punkt(0,0), Punkt(2,0), Punkt(2,2), Punkt(0,2)])
+    form = Form([Punkt(0, 0), Punkt(2, 0), Punkt(2, 2), Punkt(0, 2)])
     shear = Matrix([
         [1, 2],
         [0, 1]
     ])
-    figur.tilføjTransformation(shear)
-    print(figur.komposition)
-    print(figur.punkter[0])
-    print(figur.regnPunktTransformation(figur.punkter[0]))
+    form.tilføjTransformation(shear)
+    print(form.komposition)
+    print(form.punkter[0])
+    print(form.regnPunktTransformation(form.punkter[0]))
 
     a = Vektor(3, 2)
     b = Vektor(5, 3)
