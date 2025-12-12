@@ -107,9 +107,5 @@ class Vektor(Position):
         return længde, vinkel
 
 
-    def __repr__(self):
-        return f"Vektor(x: {self.x}, y: {self.y}, z: {self.z})"
-
-
 def vektorTripelProdukt(a: Vektor, b: Vektor, c: Vektor) -> Vektor:
     return b * (c.dot(a)) - (a * (c.dot(b)))
