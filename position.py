@@ -78,7 +78,7 @@ class Position:
             return False
 
     def __repr__(self):
-        return f"(x: {self.x}, y: {self.y}, z: {self.z})"
+        return f"(x: {self.x}, y: {self.y})"
 
 
 class Punkt(Position):
