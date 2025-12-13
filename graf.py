@@ -4,6 +4,8 @@ import time
 import timeit
 import pickle
 import random
+from copy import deepcopy
+from itertools import count
 from multiprocessing import Pool
 
 import matplotlib
@@ -13,9 +15,19 @@ import numpy as np
 from os import walk
 
 from kollision import tjekKollisionGJK
-from tilfældig_form import random_convex_polygon
+from tilfældig_form import *
 
 from position import Punkt
+
+
+def beregn_spredning(liste):
+    if not liste:
+        return 0.0  # håndter tom liste
+    n = len(liste)
+    gennemsnit = sum(liste) / n
+    varians = sum((x - gennemsnit) ** 2 for x in liste) / n
+    spredning = math.sqrt(varians)
+    return spredning
 
 
 def fåFilnavne(mappePath, filter_func=lambda _: True):
@@ -25,6 +37,11 @@ def fåFilnavne(mappePath, filter_func=lambda _: True):
         break
     return [fil for fil in filter(filter_func, filer)]
 
+def fåKolonne(path, key):
+    with open(path, "r") as f:
+        reader = csv.DictReader(f)
+        kolonneværdier = [row[key] for row in reader]
+    return kolonneværdier
 
 def gemTilCsv(path, data: list[dict]):
     fieldnames = data[0].keys()
@@ -39,18 +56,6 @@ def gemTilCsv(path, data: list[dict]):
             writer.writeheader()
         writer.writerows(data)
 
-def genererDatasæt(kanter, mængde, savePath):
-    testFormer: list = []
-    for i in range(mængde):
-        Form1 = random_convex_polygon(kanter, scale=random.uniform(2.5, 5.5))
-        Form1.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
-        Form2 = random_convex_polygon(kanter, scale=random.uniform(2.5, 5.5))
-        Form2.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
-        testFormer.append((Form1, Form2))
-
-    with open(savePath, "wb") as f:
-        pickle.dump(testFormer, f)
-
 
 def middelHastighed(func, runs=5, *args, **kwargs):
     def wrapper():
@@ -61,24 +66,9 @@ def middelHastighed(func, runs=5, *args, **kwargs):
     return avg_time
 
 
-def testDatasæt(dataPath, savePath):
-    data = None
-    with open(dataPath, "rb") as f:
-        data = pickle.load(f)
-
-    res = []
-    for (i, dataPunkt) in enumerate(data):
-        krydser = tjekKollisionGJK(dataPunkt[0], dataPunkt[1])
-        middelTid = middelHastighed(tjekKollisionGJK, 100, dataPunkt[0], dataPunkt[1])
-        middelTid *= 1000 # få i millisekunder
-        res.append({"num": i, "middelTid": middelTid, "krydser": krydser})
-
-    gemTilCsv(savePath, res)
-
-
 def kør_job(args):
     datasæt, input_fil, output_fil = args
-    testDatasæt(input_fil, output_fil)
+    #testDatasæt(input_fil, output_fil)
 
 def testDatasætIMappe(mappePath, savePath):
     os.mkdir(f"{savePath}")
@@ -287,39 +277,117 @@ def EksponentielRegression(plt, x, y):
     return float(r2)
 
 
+def genererForme(maksPunkter, antalPer):
+    for punktmængde in range(3,maksPunkter+1):
+        forme = []
+        for _ in range(antalPer):
+            forme.append(tilfældig_regulær_polygon(punktmængde, 2.5))
 
-# få maks ved hvert datasæt
-# få de 10 øverste ved hvert datasæt
+        with open(f"forme/{punktmængde}kant.pkl", "wb") as f:
+            pickle.dump(forme, f)
+
+
+def testForm(form1, form2):
+    positioner = []
+    for x in range(-6, 6, 3):
+        for y in range(-6, 6, 3):
+            positioner.append(Punkt(x, y))
+
+    resultater: list[dict] = []
+    for i in range(len(positioner)):
+        for j in range(len(positioner)):
+            if i == j:
+                continue
+            form1.centrum = positioner[i]
+            form2.centrum = positioner[j]
+
+            krydser = tjekKollisionGJK(form1, form2)
+            middelTid = middelHastighed(tjekKollisionGJK, 5, form1, form2) / 5
+            middelTid *= 1000  # få i millisekunder
+            resultater.append({"middelTid": middelTid, "krydser": krydser})
+
+    return resultater
+
+
+def testFormer(former1, former2):
+    resultater: list[dict] = []
+    for form1 in former1:
+        for form2 in former2:
+            resultater.extend(testForm(form1, form2))
+    return resultater
+
+
+from multiprocessing import Pool, cpu_count
+
+def worker(args):
+    punktAntal1, punktAntal2 = args
+
+    with open(f"forme/{punktAntal1}kant.pkl", "rb") as f:
+        former1 = pickle.load(f)
+    with open(f"forme/{punktAntal2}kant.pkl", "rb") as f:
+        former2 = pickle.load(f)
+
+    resultater = testFormer(former1, former2)
+    gemTilCsv(f"forme - resultater/{punktAntal1}-{punktAntal2}kant", resultater)
+
+    return f"færdig: {punktAntal1}-{punktAntal2}kant.csv"
+
+
 
 if __name__ == '__main__':
 
-    #for kanter in range(53, 101):
-     #   print("i gang med at generer", kanter, "kanter")
-      #  genererDatasæt(kanter, 1000, f"data/{kanter}kant.pkl")
-
-    #print("tester data...")
-    #testDatasætIMappe("testData", "resultattest")
-    #print("færdig :)")
-
-    x, y = samlDataTilGraf("data - resultat")
-    plt = genererScatterGraf(x,y)
-    #LineærRegression(plt, x, y)
-    NRegression(plt, x, y)
-    #EksponentielRegression(plt, x, y)
 
 
+    quit()
+    filnavne = fåFilnavne("forme - resultater")
 
-    plt.show()
+    gennemsnit_tider = {}
+
+    for filnavn in filnavne:
+        antal1 = int(filnavn[:filnavn.find("-")])
+        antal2 = int(filnavn[filnavn.find("-")+1:filnavn.find("k")])
+        hjørne_sum = antal1 + antal2
+
+        tider = list(map(float, fåKolonne(f"forme - resultater/{filnavn}", "middelTid")))
+        gennemsnit = sum(tider) / len(tider)
+
+        gennemsnit_tider_temp = gennemsnit_tider.get(hjørne_sum, [])
+        gennemsnit_tider_temp.append(gennemsnit)
+        gennemsnit_tider[hjørne_sum] = gennemsnit_tider_temp
+
+    items = sorted(gennemsnit_tider.items(), key=lambda i: i[0])
+
+    for (k, v) in items:
+        spredning = beregn_spredning(v)
+        print(f"{k} hjørner | spredning: {spredning} | gennemsnitdata i ms: {v}")
 
 
-    #with open("test.csv", "r") as f:
-     #   reader = csv.DictReader(f)
-      #  column_values = [row["middelTid"] for row in reader]
-       # print(column_values)
+    quit()
+    # teste data for at se hvis hjørne forskellen mellem figurer gør en forskel (parallel)
+    jobs = [
+        (punktAntal1, punktAntal2)
+        for punktAntal1 in range(3, 16)
+        for punktAntal2 in range(punktAntal1, 16)
+    ]
 
-    #genererDatasæt(3, 1000, "test/3kant.pkl")
-    #testDatasæt("testData/3kant.pkl", "test.csv")
+    with Pool(cpu_count()) as pool:
+        for status in pool.imap_unordered(worker, jobs):
+            print(status)
 
 
 
+    quit()
+    # teste data for at se hvis hjørne forskellen mellem figurer gør en forskel (ikke parallel)
+    for punktAntal1 in range(3, 15+1):
+        for punktAntal2 in range(punktAntal1, 15 + 1):
 
+            with open(f"forme/{punktAntal1}kant.pkl", "rb") as f:
+                former1 = pickle.load(f)
+            with open(f"forme/{punktAntal2}kant.pkl", "rb") as f:
+                former2 = pickle.load(f)
+            resultater = testFormer(former1, former2)
+
+            gemTilCsv(f"forme - resultater/{punktAntal1}-{punktAntal2}kant", resultater)
+            print(f"færdig: {punktAntal1}-{punktAntal2}kant.csv")
+
+    #genererForme(15, 10)
