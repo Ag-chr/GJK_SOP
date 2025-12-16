@@ -105,6 +105,10 @@ def genererScatterGraf(x, y):
 
     return plt
 
+def lavAksetitler(plt, xAkse, yAkse):
+    plt.xlabel(xAkse)
+    plt.ylabel(yAkse)
+
 def LineærRegression(plt, x, y):
     # Regression (line of best fit)
     m, b = np.polyfit(x, y, 1)  # 1 = lineær model
@@ -198,7 +202,7 @@ def NRegression(plt, x, y):
     m, b = np.polyfit(x, y, 1)
     y_pred = m * x + b
     x_plot = np.linspace(np.min(x), np.max(x), 300)
-    plt.plot(x_plot, m * x_plot + b, color="red", label=f'y = {m:.2e}·n + {b:.2e}')
+    plt.plot(x_plot, m * x_plot + b, color="red", label=f'y = {m:.4f}·n + {b:.2f}')
     r2 = _r2(y, y_pred)
     plt.title(f'O(n) regression — R² = {r2:.3f}')
     plt.legend()
@@ -301,15 +305,15 @@ def testForm(form1, form2):
             form1.centrum = positioner[i]
             form2.centrum = positioner[j]
 
-            krydser = tjekKollisionGJK(form1, form2)
+            krydser, iterationer = tjekKollisionGJK(form1, form2)
             middelTid = middelHastighed(tjekKollisionGJK, 5, form1, form2) / 5
             middelTid *= 1000  # få i millisekunder
-            resultater.append({"middelTid": middelTid, "krydser": krydser})
+            resultater.append({"middelTid": middelTid, "krydser": krydser, "iterationer": iterationer})
 
     return resultater
 
 
-def testFormer(former1, former2):
+def testForme(former1, former2):
     resultater: list[dict] = []
     for form1 in former1:
         for form2 in former2:
@@ -318,7 +322,6 @@ def testFormer(former1, former2):
 
 
 from multiprocessing import Pool, cpu_count
-
 def worker(args):
     punktAntal1, punktAntal2 = args
 
@@ -327,15 +330,49 @@ def worker(args):
     with open(f"forme/{punktAntal2}kant.pkl", "rb") as f:
         former2 = pickle.load(f)
 
-    resultater = testFormer(former1, former2)
-    gemTilCsv(f"forme - resultater/{punktAntal1}-{punktAntal2}kant", resultater)
+    resultater = testForme(former1, former2)
+    gemTilCsv(f"forme - resultater - 90 mod centrum/{punktAntal1}-{punktAntal2}kant", resultater)
 
     return f"færdig: {punktAntal1}-{punktAntal2}kant.csv"
 
+def testAlleFormKombinationer():
+    jobs = [
+        (punktAntal1, punktAntal2)
+        for punktAntal1 in range(3, 16)
+        for punktAntal2 in range(punktAntal1, 16)
+    ]
+
+    with Pool(cpu_count()) as pool:
+        for status in pool.imap_unordered(worker, jobs):
+            print(status)
 
 
 if __name__ == '__main__':
+    filnavne = fåFilnavne("forme - resultater")
+    x = []
+    y = []
+    for filnavn in filnavne:
+        antal1 = int(filnavn[:filnavn.find("-")])
+        antal2 = int(filnavn[filnavn.find("-") + 1:filnavn.find("k")])
+        hjørne_sum = antal1 + antal2
 
+        with open(f"forme - resultater - 90 mod centrum/{filnavn}", "r") as f:
+            reader = csv.DictReader(f)
+            y_values = [float(row["iterationer"]) for row in reader]
+            gennemsnit = sum(y_values) / len(y_values)
+
+            x_values = hjørne_sum
+
+            x.append(x_values)
+            y.append(gennemsnit)
+
+    x = np.array(x)
+    y = np.array(y)
+
+    plt = genererScatterGraf(x, y)
+    lavAksetitler(plt, "Antal hjørner", "Iterationer")
+    LogRegression(plt, x, y)
+    plt.show()
 
 
     quit()
@@ -360,34 +397,3 @@ if __name__ == '__main__':
     for (k, v) in items:
         spredning = beregn_spredning(v)
         print(f"{k} hjørner | spredning: {spredning} | gennemsnitdata i ms: {v}")
-
-
-    quit()
-    # teste data for at se hvis hjørne forskellen mellem figurer gør en forskel (parallel)
-    jobs = [
-        (punktAntal1, punktAntal2)
-        for punktAntal1 in range(3, 16)
-        for punktAntal2 in range(punktAntal1, 16)
-    ]
-
-    with Pool(cpu_count()) as pool:
-        for status in pool.imap_unordered(worker, jobs):
-            print(status)
-
-
-
-    quit()
-    # teste data for at se hvis hjørne forskellen mellem figurer gør en forskel (ikke parallel)
-    for punktAntal1 in range(3, 15+1):
-        for punktAntal2 in range(punktAntal1, 15 + 1):
-
-            with open(f"forme/{punktAntal1}kant.pkl", "rb") as f:
-                former1 = pickle.load(f)
-            with open(f"forme/{punktAntal2}kant.pkl", "rb") as f:
-                former2 = pickle.load(f)
-            resultater = testFormer(former1, former2)
-
-            gemTilCsv(f"forme - resultater/{punktAntal1}-{punktAntal2}kant", resultater)
-            print(f"færdig: {punktAntal1}-{punktAntal2}kant.csv")
-
-    #genererForme(15, 10)
