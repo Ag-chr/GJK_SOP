@@ -10,7 +10,7 @@ from pygameHelper import til_skærm
 from former import *
 from gjk_funkioner import minkowski
 from kollision import tjekKollisionGJK, tjekKollisionAABB
-from tilfældig_form import random_convex_polygon
+from tilfældig_form import *
 
 pygame.init()
 clock = pygame.time.Clock()
@@ -20,41 +20,26 @@ scale = VINDUEHØJDE / 100
 canvas = pygame.Surface((VINDUEBREDDE, VINDUEHØJDE))
 font = pygame.font.Font(None, 36)
 
-text_kollision = font.render(f"Kollision: {False}", True, (0, 0, 0))
-text_rect_kollision = text_kollision.get_rect(topleft=(10, 10))
+former: list[Form] = []
 
-former = []
-
-rotate = Matrix([
-    [math.cos(math.degrees(360)), -math.sin(360)],
-    [math.sin(math.degrees(360)), math.cos(math.degrees(360))]
-])
 stræk = Matrix([
-    [2, 0],
-    [0, 1]
+    [1, 0],
+    [0, 2]
 ])
 
-form1 = Form([Punkt(4, 11), Punkt(9, 9), Punkt(4, 5)])
-form2 = Form([Punkt(5, 7), Punkt(10, 2), Punkt(12, 7), Punkt(7, 3)])
-
+polygon1 = Form([Punkt(4, 11), Punkt(9, 9), Punkt(4, 5)])
+polygon2 = Form([Punkt(7, 11), Punkt(12, 6), Punkt(14, 11), Punkt(9, 7)])
+minkowskiForm = minkowski(polygon1, polygon2, False)
 cirkel = Cirkel(3, Punkt(0,5))
-cirkel.tilføjTransformation(stræk)
+#polygon2.tilføjTransformation(stræk)
 
-form1.tilføjTransformation(rotate)
-
-former.append(form1)
-former.append(form2)
-former.append(cirkel)
-
-minkowskiForm = minkowski(form1, form2, False)
+former.append(polygon2)
+former.append(polygon1)
 #former.append(minkowskiForm)
 
-testFormer: list[(Form, Form)] = []
-
-filnavn = "10kant.pkl"
 
 def start():
-    global testFormer
+    global former
     holdtForm = None
 
     running = True
@@ -67,29 +52,23 @@ def start():
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 running = False
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:
-                    form = random_convex_polygon(5, scale=random.uniform(2.5, 5.5), max_attempts=20)
-                    form.centrum = Punkt(random.uniform(-6, 6), random.uniform(-6, 6))
-                    former.append(form)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
 
-                elif event.key == pygame.K_p:
-                    former.pop()
-                elif event.key == pygame.K_o:
-                    testFormer.append((former.pop(), former.pop()))
-                elif event.key == pygame.K_s:
-                    print("save")
-                    with open(filnavn, "wb") as f:
-                        pickle.dump(testFormer, f)
-                elif event.key == pygame.K_l:
-                    with open(filnavn, "rb") as f:
-                        data = pickle.load(f)
-                        print(len(data))
-                        print(len(data[0]))
-                elif event.key == pygame.K_h:
-                    with open(filnavn, "rb") as f:
-                        testFormer = pickle.load(f)
+                former.append(tilfældig_regulær_polygon(7, 2.5))
 
+
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_k:
+                import timeit
+                tjekKollisionGJK(polygon1, polygon2)
+                print(timeit.timeit(lambda: tjekKollisionGJK(polygon1, polygon2), number=10000))
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                former.pop()
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_d:
+                print("form1", round(former[-1].centrum.x, 1), round(former[-1].centrum.y, 1))
+                print("form2", round(former[-2].centrum.x, 1), round(former[-2].centrum.y, 1))
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_w:
+                with open(f"forme/3kant.pkl", "rb") as f:
+                    former = pickle.load(f)
 
 
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -119,7 +98,6 @@ def start():
                          2)  # x akse
         pygame.draw.line(canvas, (100, 100, 100), (VINDUEBREDDE / 2, 0), (VINDUEBREDDE / 2, VINDUEHØJDE),
                          2)  # y akse
-        #pygame.draw.circle(canvas, (0, 0, 0), (VINDUEBREDDE / 2, VINDUEHØJDE / 2), 10)  # origo
 
         for form in former:
             form.tegn(canvas)
@@ -135,15 +113,12 @@ def start():
                     form1.tegn(canvas, (255, 0, 0))
                     form2.tegn(canvas, (255, 0, 0))
 
+        polygon2.tegn(canvas, (221, 82, 204))
+        polygon1.tegn(canvas, (32, 189, 255))
+
+
         text_kollision = font.render(f"Kollision: {kollision}", True, (0, 0, 0))
-
-        text = font.render(f"størrelse: {len(testFormer)}", True, (0, 0, 0))
-        text_rect = text.get_rect(topleft=(10, 40))
-        canvas.blit(text, text_rect)
-
-        text = font.render(f"filnavn: {filnavn}", True, (0, 0, 0))
-        text_rect = text.get_rect(topleft=(10, 70))
-        canvas.blit(text, text_rect)
+        text_rect_kollision = text_kollision.get_rect(topleft=(10, 10))
 
         canvas.blit(text_kollision, text_rect_kollision)
         window.set_clip(pygame.Rect((0, 0), (VINDUEBREDDE, VINDUEHØJDE)))

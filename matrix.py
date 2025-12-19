@@ -6,9 +6,6 @@ class Matrix:
             raise "matrix er ikke en nested list af floats"
         self.matrix = matrix
 
-    def transponere(self):
-        pass
-
     def rækker(self):
         return len(self.matrix)
 

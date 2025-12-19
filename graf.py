@@ -105,52 +105,10 @@ def genererScatterGraf(x, y):
 
     return plt
 
+
 def lavAksetitler(plt, xAkse, yAkse):
     plt.xlabel(xAkse)
     plt.ylabel(yAkse)
-
-def LineærRegression(plt, x, y):
-    # Regression (line of best fit)
-    m, b = np.polyfit(x, y, 1)  # 1 = lineær model
-    plt.plot(x, m * x + b, color='red', label=f'y = {m:.2e}x + {b:.2e}')
-    # Beregn R^2
-    y_pred = m * x + b
-    ss_res = np.sum((y - y_pred) ** 2)
-    ss_tot = np.sum((y - np.mean(y)) ** 2)
-    r_squared = 1 - (ss_res / ss_tot)
-    plt.title(f'Regression med R² = {r_squared:.3f}')
-    plt.legend()
-
-
-def EksponentielRegression(plt, x, y):
-    x = np.array(x)
-    y = np.array(y)
-
-    # Filtrér ugyldige / ikke-positive y (kan ikke log-transformere)
-    mask = np.isfinite(x) & np.isfinite(y) & (y > 0)
-    x = x[mask]
-    y = y[mask]
-    if x.size == 0:
-        return  # Intet at regresse på
-
-    # Fit på log(y)
-    log_y = np.log(y)
-    m, b = np.polyfit(x, log_y, 1)  # log_y ≈ m*x + b  =>  y ≈ exp(b) * exp(m*x)
-
-    # Beregn R^2 ud fra originale x (til sammenligning)
-    y_pred_orig = np.exp(b + m * x)
-    ss_res = np.sum((y - y_pred_orig) ** 2)
-    ss_tot = np.sum((y - np.mean(y)) ** 2)
-    r_squared = 1 - (ss_res / ss_tot) if ss_tot != 0 else float('nan')
-
-    # Lav en glat, sorteret x-akse til plotting (undgår "loops" når x ikke er sorteret)
-    x_plot = np.linspace(np.min(x), np.max(x), 500)
-    y_plot = np.exp(b + m * x_plot)
-
-    # Plot kun regressionskurven (ingen scatter her)
-    plt.plot(x_plot, y_plot, color='red', label=f'y = {np.exp(b):.2f} * exp({m:.2f} * x)')
-    plt.title(f'Eksponentiel regression med R² = {r_squared:.3f}')
-    plt.legend()
 
 
 def _r2(y_true, y_pred):
@@ -175,7 +133,7 @@ def KonstantRegression(plt, x, y):
     plt.legend()
     return float(r2)
 
-# O(log n) - model y ≈ m * log(x) + b
+# O(log n) - model y = m * log(x) + b
 def LogRegression(plt, x, y):
     mask = np.isfinite(x) & np.isfinite(y) & (x > 0)
     x = x[mask]; y = y[mask]
@@ -193,7 +151,7 @@ def LogRegression(plt, x, y):
     plt.legend()
     return float(r2)
 
-# O(n) - lineær i n : y ≈ m*n + b
+# O(n) - lineær i n : y = m*n + b
 def NRegression(plt, x, y):
     mask = np.isfinite(x) & np.isfinite(y)
     x = x[mask]; y = y[mask]
@@ -208,7 +166,7 @@ def NRegression(plt, x, y):
     plt.legend()
     return float(r2)
 
-# O(n log n) - fit y ≈ m*(n log n) + b
+# O(n log n) - fit y = m*(n log n) + b
 def NLogNRegression(plt, x, y):
     mask = np.isfinite(x) & np.isfinite(y) & (x > 0)
     x = x[mask]; y = y[mask]
@@ -225,7 +183,7 @@ def NLogNRegression(plt, x, y):
     plt.legend()
     return float(r2)
 
-# O(n^2) - fit y ≈ m*n^2 + b
+# O(n^2) - fit y = m*n^2 + b
 def N2Regression(plt, x, y):
     mask = np.isfinite(x) & np.isfinite(y)
     x = x[mask]; y = y[mask]
@@ -239,25 +197,6 @@ def N2Regression(plt, x, y):
     plt.plot(x_plot, y_plot, color="red", label=f'y = {m:.2e}·n^2 + {b:.2e}')
     r2 = _r2(y, y_pred)
     plt.title(f'O(n^2) regression — R² = {r2:.3f}')
-    plt.legend()
-    return float(r2)
-
-# O(n^k) - power-law via log-log: y ≈ c * n^k
-def PowerLawRegression(plt, x, y):
-    mask = np.isfinite(x) & np.isfinite(y) & (x > 0) & (y > 0)
-    x = x[mask]; y = y[mask]
-    if x.size < 2:
-        return float('nan')
-    logx = np.log(x)
-    logy = np.log(y)
-    k, logc = np.polyfit(logx, logy, 1)  # log(y) = k*log(x) + logc
-    c = float(np.exp(logc))
-    y_pred = c * (x ** k)
-    x_plot = np.linspace(np.min(x), np.max(x), 400)
-    y_plot = c * (x_plot ** k)
-    plt.plot(x_plot, y_plot, color="red", label=f'y = {c:.2e}·n^{k:.3f}')
-    r2 = _r2(y, y_pred)
-    plt.title(f'O(n^k) power-law regression — k = {k:.3f}, R² = {r2:.3f}')
     plt.legend()
     return float(r2)
 
@@ -356,7 +295,7 @@ if __name__ == '__main__':
         antal2 = int(filnavn[filnavn.find("-") + 1:filnavn.find("k")])
         hjørne_sum = antal1 + antal2
 
-        with open(f"forme - resultater - 90 mod centrum/{filnavn}", "r") as f:
+        with open(f"forme - resultater - tilfældig/{filnavn}", "r") as f:
             reader = csv.DictReader(f)
             y_values = [float(row["iterationer"]) for row in reader]
             gennemsnit = sum(y_values) / len(y_values)
@@ -370,7 +309,7 @@ if __name__ == '__main__':
     y = np.array(y)
 
     plt = genererScatterGraf(x, y)
-    lavAksetitler(plt, "Antal hjørner", "Iterationer")
+    lavAksetitler(plt, "Antal hjørner", "Gennemsnitlig mængde af iterationer")
     LogRegression(plt, x, y)
     plt.show()
 
